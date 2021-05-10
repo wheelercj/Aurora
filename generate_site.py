@@ -63,7 +63,7 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     # Fix the images. gh_md_to_html doesn't seem to convert the image links correctly.
     # `.png" src="/images/` must be changed to
     # `.png" src="images/`
-    incorrect_link_pattern = r'\.png\" src=\"/images/'
+    incorrect_link_pattern = r'\.png\" src=\".*images/'
     n = replace_pattern(incorrect_link_pattern, '.png" src="images/', html_paths)
     print(f'Fixed the src path of {n} image links.')
 

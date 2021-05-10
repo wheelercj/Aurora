@@ -1,7 +1,6 @@
 # TODO
 
-* Start using version control.
-* fix bugs: images not showing, multiple headers in some coding practice prompts
+* fix bugs: multiple headers in some coding practice prompts
 * think about what to do with old site files that aren't being used anymore.
 * update the old template HTML. Move it into an HTML file and create python functions that get that html from that file.
 
