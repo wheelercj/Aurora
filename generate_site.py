@@ -72,17 +72,18 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     n = replace_pattern(md_link_pattern, r'<a href="\2">\1</a>', html_paths)
     print(f'Converted {n} attachment links from the md to the html format.')
 
-    # Move index.html and about.html to the parent folder.
-    # parent_html_names = [ 'index.html', 'about.html' ]
-    # parent_html_paths = []
-    # for parent_name in parent_html_names:
+    # TODO: create a posts folder. Only index.html and about.html should be in the root folder.
+    # Move index.html and about.html to the root folder.
+    # root_html_names = [ 'index.html', 'about.html' ]
+    # root_html_paths = []
+    # for file_name in root_html_names:
     #     for path in html_paths:
-    #         if path.endswith(parent_name):
-    #             new_html_path = os.path.join(site_path, parent_name)
+    #         if path.endswith(file_name):
+    #             new_html_path = os.path.join(site_path, file_name)
     #             os.rename(path, new_html_path)
-    #             parent_html_paths += new_html_path
+    #             root_html_paths += new_html_path
     #             html_paths.remove(path)
-    #             print(f'Moved {parent_name} to the parent folder.')
+    #             print(f'Moved {file_name} to the root folder.')
 
     print('Removing some unwanted CSS that was added by gh_md_to_html.')
     remove_css(html_paths)
