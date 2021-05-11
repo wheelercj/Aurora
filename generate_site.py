@@ -116,67 +116,33 @@ def append_html(file_name, html):
 
 
 def insert_template_html(all_html_paths, website_title, folder_name=''):
+    this_dir, _ = os.path.split(__file__)
+    os.chdir(this_dir)
     for path in all_html_paths:
-        with open(path, 'r', encoding='utf8') as file:
+        with open(path, 'r+', encoding='utf8') as file:
             contents = file.read()
-        contents = get_header_html(folder_name, website_title) + contents
-        with open(path, 'w', encoding='utf8') as file:
             file.truncate(0)
+            contents = get_header_html(folder_name, website_title) + contents + get_footer_html()
             file.write(contents)
-        with open(path, 'a', encoding='utf8') as file:
-            file.write(get_footer_html())
 
 
 def get_header_html(folder, website_title):
-    return f'''
-        <!DOCTYPE html>
+    with open('header.html', 'r', encoding='utf8') as file:
+        header_html = file.read()
+    header_html = header_html.replace('{folder}', folder)
+    header_html = header_html.replace('{website_title}', website_title)
 
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>{website_title}</title>
-                <link rel="stylesheet" type="text/css" href="{folder}style.css" media="screen"/>
-                <!-- bootstrap -->
-                <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
-                <!-- bootstrap -->
-            </head>
-            
-            <body>
-                <header>
-                    <div class="header-contents">
-                        <nav>
-                            <a href="{folder}index.html" class="title" style="float: left">{website_title}</a>
-                            <a href="{folder}about.html" style="float: right">About</a>
-                            <p style="float: right">&emsp;&emsp;</p>
-                            <a href="{folder}index.html" style="float: right">Home</a>
-                            <div style="clear: both"></div>
-                        </nav>
-                    </div>
-                </header>
-
-                <div class="content">
-        '''
+    return header_html
 
 
 def get_footer_html(footer=''):
-    time_now = datetime.datetime.now()
-    return f'''
-                </div>
+    time_now = str(datetime.datetime.now())
+    with open('footer.html', 'r', encoding='utf8') as file:
+        footer_html = file.read()
+    footer_html = footer_html.replace('{footer}', footer)
+    footer_html = footer_html.replace('{time_now}', time_now)
 
-                <footer>
-                    {footer}
-                    <!-- page built on {time_now} UTC -->
-                </footer>
-
-                <!-- bootstrap -->
-                <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-                <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
-                <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
-                <!-- bootstrap -->
-            </body>
-        </html>
-    '''
+    return footer_html
 
 
 # Returns the total number of replacements.
