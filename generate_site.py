@@ -54,23 +54,25 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     n = replace_pattern(md_link_pattern, '.html', new_zettel_paths)
     print(f'Converted {n} internal links from ending with `.md` to ending with `.html`.')
 
+    # Get a list of any HTML files that already exist, to compare later.
+    old_html_paths = get_file_paths(site_posts_path, '.html')
+
     print('Creating html files from the md files.')
     for zettel_path in new_zettel_paths:
         gh_md_to_html.main(zettel_path, destination=site_path)
 
-    # Get all the new html files.
-    html_paths = get_file_paths(site_posts_path, '.html')
+    all_html_paths = get_file_paths(site_posts_path, '.html')
 
     # Fix the images. gh_md_to_html doesn't seem to convert the image links correctly.
     # `.png" src="/images/` must be changed to
     # `.png" src="images/`
-    incorrect_link_pattern = r'\.png\" src=\".*images/'
-    n = replace_pattern(incorrect_link_pattern, '.png" src="images/', html_paths)
+    incorrect_link_pattern = r'\.png\" src=\".+images/'
+    n = replace_pattern(incorrect_link_pattern, '.png" src="images/', all_html_paths)
     print(f'Fixed the src path of {n} image links.')
 
     # Convert any attachment links from the md to the html format (gh_md_to_html doesn't do this).
     md_link_pattern = r'\[(.+)]\((.+)\)'
-    n = replace_pattern(md_link_pattern, r'<a href="\2">\1</a>', html_paths)
+    n = replace_pattern(md_link_pattern, r'<a href="\2">\1</a>', all_html_paths)
     print(f'Converted {n} attachment links from the md to the html format.')
 
     # TODO: create a posts folder. Only index.html and about.html should be in the root folder.
@@ -78,21 +80,22 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     # root_html_names = [ 'index.html', 'about.html' ]
     # root_html_paths = []
     # for file_name in root_html_names:
-    #     for path in html_paths:
+    #     for path in all_html_paths:
     #         if path.endswith(file_name):
     #             new_html_path = os.path.join(site_path, file_name)
     #             os.rename(path, new_html_path)
     #             root_html_paths += new_html_path
-    #             html_paths.remove(path)
+    #             all_html_paths.remove(path)
     #             print(f'Moved {file_name} to the root folder.')
 
     print('Removing some unwanted CSS that was added by gh_md_to_html.')
-    remove_css(html_paths)
-    n = replace_pattern(re.escape('<div class="highlight '), '<div class="', html_paths)
+    remove_css(all_html_paths)
+    n = replace_pattern(re.escape('<div class="highlight '), '<div class="', all_html_paths)
 
     print('Inserting the site header, footer, etc. into each html file.')
     append_html('index.html', f'<br><br><br><br><br><br><br><p style="text-align: center">{copyright_text}</p>')
-    insert_template_html(html_paths, website_title)
+    new_html_paths = get_new_html_paths(zettel_paths, site_posts_path)
+    insert_template_html(new_html_paths, website_title)
 
     # TODO: if I can't use the gh_md_to_html option to not add extra CSS, try overwriting their CSS instead of editing every HTML file like with remove_css except the one line with a style tag.
     # print('Overwriting github-css.css')
@@ -100,6 +103,9 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
 
     print('Checking for style.css.')
     check_style(site_path)
+
+    print('Deleting any HTML files that were not just generated and were not listed in custom-HTML-file-names.txt.')
+    delete_old_html_files(old_html_paths, all_html_paths, site_path)
 
     print('\nWebsite generation complete.\n')
 
@@ -109,13 +115,16 @@ def append_html(file_name, html):
         file.write(html)
 
 
-def insert_template_html(html_paths, website_title, folder_name=''):
-    for path in html_paths:
+def insert_template_html(all_html_paths, website_title, folder_name=''):
+    for path in all_html_paths:
         with open(path, 'r', encoding='utf8') as file:
             contents = file.read()
-        contents = get_header_html(folder_name, website_title) + contents + get_footer_html()
+        contents = get_header_html(folder_name, website_title) + contents
         with open(path, 'w', encoding='utf8') as file:
+            file.truncate(0)
             file.write(contents)
+        with open(path, 'a', encoding='utf8') as file:
+            file.write(get_footer_html())
 
 
 def get_header_html(folder, website_title):
@@ -146,7 +155,8 @@ def get_header_html(folder, website_title):
                     </div>
                 </header>
 
-                <div class="content">'''
+                <div class="content">
+        '''
 
 
 def get_footer_html(footer=''):
@@ -211,6 +221,17 @@ def get_zettels_to_publish(dir_path):
     return zettels_to_publish
 
 
+def get_new_html_paths(zettel_paths, site_posts_path):
+    new_html_paths = []
+    for path in zettel_paths:
+        zettel_name = os.path.basename(path)
+        html_name = zettel_name[:-2] + 'html'
+        html_path = os.path.join(site_posts_path, html_name)
+        new_html_paths.append(html_path)
+
+    return new_html_paths
+
+
 def get_file_paths(dir_path, file_extension):
     os.chdir(dir_path)
     dir_list = os.listdir()
@@ -239,7 +260,7 @@ def get_attachment_paths(zettel_paths):
     return attachment_paths
 
 
-def remove_css(html_paths):
+def remove_css(all_html_paths):
     # gh_md_to_html inserts some extra CSS that I don't want.
     # Remove it by deleting some HTML divs and an article.
     strings_to_delete = [
@@ -251,7 +272,7 @@ def remove_css(html_paths):
         '</article>\n</div>\n</div>\n</div>\n</div>',
     ]
 
-    for path in html_paths:
+    for path in all_html_paths:
         with open(path, 'r', encoding='utf8') as file:
             contents = file.read()
         for string in strings_to_delete:
@@ -268,7 +289,36 @@ def overwrite_github_css_file(site_path):
 def check_style(site_path):
     style_file = os.path.join(site_path, 'style.css')
     if os.path.isfile(style_file):
-        print('    style.css already exists. The file will not be changed.')
+        print('  style.css already exists. The file will not be changed.')
     else:
-        print('    style.css was not found. Providing a new copy.')
+        print('  style.css was not found. Providing a new copy.')
         shutil.copy('C:/Users/chris/Documents/programming/generate site/style.css', site_path)
+
+
+def delete_old_html_files(old_html_paths, all_html_paths, site_path):
+    '''Delete any HTML files that are not being regenerated and not marked to be saved.
+    
+    old_html_paths is the list of paths before the #published zettels were converted to HTML.
+    all_html_paths is the list of paths after. Files can be marked to be saved by putting
+    their name on a new line in custom-HTML-file-names.txt
+    '''
+    file_name = os.path.join(site_path, 'custom-HTML-file-names.txt')
+    with open(file_name, 'r') as file:
+        custom_html_file_names = file.read().split('\n')
+
+    old_count = 0
+    for old_path in old_html_paths:
+        if old_path not in all_html_paths:
+            if os.path.basename(old_path) not in custom_html_file_names:
+                old_count += 1
+                print(f'  Ready to delete {old_path}.')
+                answer = input('  Confirm (y/n): ').lower()
+                if answer == 'y':
+                    os.remove(old_path)
+                    print(f'    Deleted {old_path}')
+                else:
+                    raise ValueError
+    if not old_count:
+        print('  No old HTML files found.')
+    else:
+        print(f'  Deleted {old_count} files.')

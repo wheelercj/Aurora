@@ -15,7 +15,7 @@ This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.
 * The site generation process requires an internet connection and has some limits on how many times it can be used by each person each hour. This limit comes from GitHub's REST API.
 
 ## What gets overwritten?
-When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files that contain the #published tag will be overwritten. Also, github-css.css will get overwritten on each site generation. The program will not overwrite style.css and will create it only if it does not already exist.
+When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files that contain the #published tag will be overwritten. Also, github-css.css will get overwritten on each site generation. The program will not overwrite style.css and will create it only if it does not already exist. If there are HTML files in the site folder that do not get overwritten, they will be automatically deleted unless their names (not the entire paths) are listed in a file in the site folder named custom-HTML-file-names.txt, each file name on its own line.
 
 ## Implementation details
 This program uses [phseiff's gh-md-to-html module](https://github.com/phseiff/github-flavored-markdown-to-html).
