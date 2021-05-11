@@ -274,8 +274,8 @@ def delete_old_html_files(old_html_paths, all_html_paths, site_path):
     '''Delete any HTML files that are not being regenerated and not marked to be saved.
     
     old_html_paths is the list of paths before the #published zettels were converted to HTML.
-    all_html_paths is the list of paths after. Files can be marked to be saved by putting
-    their name on a new line in custom-HTML-file-names.txt
+    all_html_paths is the list of paths after. A file can be marked to be saved by putting
+    its name on a new line in custom-HTML-file-names.txt
     '''
     file_name = os.path.join(site_path, 'custom-HTML-file-names.txt')
     with open(file_name, 'r') as file:
@@ -291,8 +291,6 @@ def delete_old_html_files(old_html_paths, all_html_paths, site_path):
                 if answer == 'y':
                     os.remove(old_path)
                     print(f'    Deleted {old_path}')
-                else:
-                    raise ValueError
     if not old_count:
         print('  No old HTML files found.')
     else:
