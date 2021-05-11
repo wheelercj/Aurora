@@ -21,6 +21,8 @@ nav {
 nav a {
     color: skyblue;
     text-decoration: none;
+}
+nav ul a {
     padding-left: 25px;
 }
 nav ul {
@@ -37,4 +39,7 @@ main {
 }
 footer {
     margin: 50px;
+}
+h1 {
+    padding-bottom: 3%;
 }
