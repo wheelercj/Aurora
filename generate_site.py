@@ -10,7 +10,8 @@ from convert_links import zk_to_md
 
 
 def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags):
-    if site_path == zettelkasten_path:
+    this_dir, _ = os.path.split(__file__)
+    if site_path == zettelkasten_path or site_path == this_dir:
         raise ValueError
 
     site_posts_path = site_path
