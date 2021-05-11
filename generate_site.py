@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import gh_md_to_html
+import datetime
 
 # Internal imports.
 from convert_links import zk_to_md
@@ -149,11 +150,13 @@ def get_header_html(folder, website_title):
 
 
 def get_footer_html(footer=''):
+    time_now = datetime.datetime.now()
     return f'''
                 </div>
 
                 <footer>
                     {footer}
+                    <!-- page built on {time_now} UTC -->
                 </footer>
 
                 <!-- bootstrap -->
