@@ -192,11 +192,20 @@ def replace_pattern(pattern, replacement_string, file_paths, encoding='utf8'):
                 print(f'UnicodeDecodeError: {e}')
                 raise e
 
-        # Remove any code blocks from contents.
-        contents = re.sub(r'`{1,3}(.|\n)*?`{1,3}', '', contents)
+        # Temporarily remove any code blocks from contents.
+        code_block_pattern = r'(`{1,3}(.|\n)*?`{1,3})'
+        code_blocks = re.findall(code_block_pattern, contents)
+        contents = re.sub(code_block_pattern, '␝', contents)
 
+        # Replace the pattern.
         new_contents, n_replaced = compiled_pattern.subn(replacement_string, contents)
         total_replaced += n_replaced
+
+        # Put back the code blocks.
+        for code_block in code_blocks:
+            new_contents = re.sub(r'␝', code_block[0], new_contents, count=1)
+        
+        # Save changes.
         if n_replaced > 0:
             with open(file_path, 'w', encoding=encoding) as file:
                 file.write(new_contents)
