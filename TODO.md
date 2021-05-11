@@ -13,3 +13,4 @@
 * type hinting
 * docstrings
 * more options moved to generate_my_site.py
+* allow posts to be in a different folder from index.html, etc.
