@@ -1,7 +1,5 @@
 # TODO
 
-* update the old template HTML. Move it into an HTML file and create python functions that get that html from that file.
-
 * change the internal links from section symbol to note title. keep a section symbol in front?
 * create another script to check for link rot, especially for internal links. list all zettels on index.md.
 
@@ -12,3 +10,6 @@
 ## long-term
 * make this work with command-line arguments?
 * Add a license. Figure out which licenses I'm allowed to consider using. gh-md-to-html uses the MIT license.
+* type hinting
+* docstrings
+* more options moved to generate_my_site.py
