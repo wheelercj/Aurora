@@ -11,11 +11,11 @@ import sys
 
 
 def zk_to_md(zettel_paths):
-    return convert(r'\[\[(\d{14})\]\]', r'[§§](\1.md)', zettel_paths)
+    return convert(r'\[\[(\d{14})\]\]', r'[[§]](\1.md)', zettel_paths)
 
 
 def md_to_zk(zettel_paths):
-    return convert(r'\[§§\]\((\d{14})\.md\)', r'[[\1]]', zettel_paths)
+    return convert(r'\[\[§\]\]\((\d{14})\.md\)', r'[[\1]]', zettel_paths)
 
 
 # Parameters:
