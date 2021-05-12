@@ -291,7 +291,9 @@ def delete_old_html_files(old_html_paths, all_html_paths, site_path):
                 answer = input('  Confirm (y/n): ').lower()
                 if answer == 'y':
                     os.remove(old_path)
-                    print(f'    Deleted {old_path}')
+                    print('    File deleted.')
+                else:
+                    print('    File saved.')
     if not old_count:
         print('  No old HTML files found.')
     else:
