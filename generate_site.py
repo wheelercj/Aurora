@@ -258,17 +258,21 @@ def remove_css(all_html_paths):
 
 
 def overwrite_github_css_file(site_path):
-    destination = os.path.join(site_path, 'github-markdown-css')
-    shutil.copy('C:/Users/chris/Documents/programming/generate site/github-css.css', destination)
+    site_style_folder = os.path.join(site_path, 'github-markdown-css')
+    this_dir, _ = os.path.split(__file__)
+    this_style_path = os.path.join(this_dir, 'github-css.css')
+    shutil.copy(this_style_path, site_style_folder)
 
 
 def check_style(site_path):
-    style_file = os.path.join(site_path, 'style.css')
-    if os.path.isfile(style_file):
+    site_style_path = os.path.join(site_path, 'style.css')
+    if os.path.isfile(site_style_path):
         print('  style.css already exists. The file will not be changed.')
     else:
         print('  style.css was not found. Providing a new copy.')
-        shutil.copy('C:/Users/chris/Documents/programming/generate site/style.css', site_path)
+        this_dir, _ = os.path.split(__file__)
+        this_style_path = os.path.join(this_dir, 'style.css')
+        shutil.copy(this_style_path, site_path)
 
 
 def delete_old_html_files(old_html_paths, all_html_paths, site_path):
