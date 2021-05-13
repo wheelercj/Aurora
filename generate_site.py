@@ -35,7 +35,11 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     attachment_paths = get_attachment_paths(zettel_paths)
     print(f'Found {len(attachment_paths)} attachments. Copying to {site_posts_path}')
     for path in attachment_paths:
-        shutil.copy(path, site_posts_path)
+        try:
+            shutil.copy(path, site_posts_path)
+        except shutil.SameFileError:
+            _, file_name = os.path.split(path)
+            print(f'  Did not copy {file_name} because it is already there.')
 
     attachment_link_pattern = r'(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))'
     n = replace_pattern(attachment_link_pattern, r'\1', new_zettel_paths)
