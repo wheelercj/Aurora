@@ -105,7 +105,7 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     print('Checking for style.css.')
     check_style(site_path)
 
-    print('Deleting any HTML files that were not just generated and were not listed in custom-HTML-file-names.txt.')
+    print('Deleting any HTML files that were not just generated and were not listed in ssg-ignore.txt.')
     delete_old_html_files(old_html_paths, all_html_paths, site_path)
 
     print('\nWebsite generation complete.\n')
@@ -294,16 +294,20 @@ def delete_old_html_files(old_html_paths, all_html_paths, site_path):
     
     old_html_paths is the list of paths before the #published zettels were converted to HTML.
     all_html_paths is the list of paths after. A file can be marked to be saved by putting
-    its name on a new line in custom-HTML-file-names.txt
+    its absolute path on a new line in ssg-ignore.txt
     '''
-    file_name = os.path.join(site_path, 'custom-HTML-file-names.txt')
+    file_name = os.path.join(site_path, 'ssg-ignore.txt')
     with open(file_name, 'r') as file:
-        custom_html_file_names = file.read().split('\n')
+        ignored_html_paths = file.read().split('\n')
+
+    # Make sure all the slashes in all the paths are the same.
+    for path in ignored_html_paths:
+        path = path.replace('/', '\\')
 
     old_count = 0
     for old_path in old_html_paths:
         if old_path not in all_html_paths:
-            if os.path.basename(old_path) not in custom_html_file_names:
+            if old_path not in ignored_html_paths:
                 old_count += 1
                 print(f'  Ready to delete {old_path}.')
                 answer = input('  Confirm (y/n): ').lower()
