@@ -24,8 +24,9 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     
     # Copy zettels to the site folder.
     print(f'Copying the zettels to {site_posts_path}')
+    new_zettel_paths = []
     for zettel_path in zettel_paths:
-        shutil.copy(zettel_path, site_posts_path)
+        new_zettel_paths.append(shutil.copy(zettel_path, site_posts_path))
 
     # Copy other linked files.
     print('Searching for any attachments that are linked to in the zettels.')
@@ -33,9 +34,6 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     print(f'Found {len(attachment_paths)} attachments. Copying to {site_posts_path}')
     for path in attachment_paths:
         shutil.copy(path, site_posts_path)
-
-    # Get the new zettel paths.
-    new_zettel_paths = get_zettels_to_publish(site_posts_path)
 
     attachment_link_pattern = r'(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))'
     n = replace_pattern(attachment_link_pattern, r'\1', new_zettel_paths)
