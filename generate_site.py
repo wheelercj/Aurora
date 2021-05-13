@@ -22,7 +22,9 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     zettel_paths = get_zettels_to_publish(zettelkasten_path)
     print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
     
-    # Copy zettels to the site folder.
+    print('Deleting all markdown files currently in the site folder.')
+    delete_site_md_files(site_posts_path)
+
     print(f'Copying the zettels to {site_posts_path}')
     new_zettel_paths = []
     for zettel_path in zettel_paths:
@@ -201,6 +203,12 @@ def get_zettels_to_publish(dir_path):
             zettels_to_publish.append(zettel_path)
 
     return zettels_to_publish
+
+
+def delete_site_md_files(site_posts_path):
+    md_paths = get_file_paths(site_posts_path, '.md')
+    for path in md_paths:
+        os.remove(path)
 
 
 def get_new_html_paths(zettel_paths, site_posts_path):
