@@ -147,9 +147,11 @@ def get_footer_html(footer=''):
 
 
 # Returns the total number of replacements.
-def replace_pattern(pattern, replacement_string, file_paths, encoding='utf8'):
+def replace_pattern(pattern, replacement, file_paths, encoding='utf8'):
     total_replaced = 0
-    compiled_pattern = re.compile(pattern)
+    chosen_pattern = re.compile(pattern)
+    triple_code_block_pattern = re.compile(r'(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})')
+    single_code_block_pattern = re.compile(r'(`[^`]+?`)')
     
     for file_path in file_paths:
         with open(file_path, 'r', encoding=encoding) as file:
@@ -160,17 +162,23 @@ def replace_pattern(pattern, replacement_string, file_paths, encoding='utf8'):
                 raise e
 
         # Temporarily remove any code blocks from contents.
-        code_block_pattern = r'(`{1,3}(.|\n)*?`{1,3})'
-        code_blocks = re.findall(code_block_pattern, contents)
-        contents = re.sub(code_block_pattern, '␝', contents)
+        triple_code_blocks = triple_code_block_pattern.findall(contents)
+        if len(triple_code_blocks):
+            contents = triple_code_block_pattern.sub('␝', contents)
+
+        single_code_blocks = single_code_block_pattern.findall(contents)
+        if len(single_code_blocks):
+            contents = single_code_block_pattern.sub('␞', contents)
 
         # Replace the pattern.
-        new_contents, n_replaced = compiled_pattern.subn(replacement_string, contents)
+        new_contents, n_replaced = chosen_pattern.subn(replacement, contents)
         total_replaced += n_replaced
 
         # Put back the code blocks.
-        for code_block in code_blocks:
-            new_contents = re.sub(r'␝', code_block[0], new_contents, count=1)
+        for single_code_block in single_code_blocks:
+            new_contents = re.sub(r'␞', single_code_block[0], new_contents, count=1)
+        for triple_code_block in triple_code_blocks:
+            new_contents = re.sub(r'␝', triple_code_block[0], new_contents, count=1)
         
         # Save changes.
         if n_replaced > 0:
