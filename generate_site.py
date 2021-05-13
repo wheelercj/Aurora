@@ -65,8 +65,8 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
     print('Creating html files from the md files.')
     for zettel_path in new_zettel_paths:
         gh_md_to_html.main(zettel_path, destination=site_path)
-
     all_html_paths = get_file_paths(site_posts_path, '.html')
+    check_rate_limit()
 
     # Fix the images. gh_md_to_html doesn't seem to convert the image links correctly.
     # `.png" src="/images/` must be changed to
@@ -324,3 +324,14 @@ def delete_old_html_files(old_html_paths, all_html_paths, site_path):
         print('  No old HTML files found.')
     else:
         print(f'  Deleted {old_count} files.')
+
+
+def check_rate_limit():
+    '''Check whether the REST API rate limit was exceeded.'''
+    with open('index.html', 'r', encoding='utf8') as file:
+        contents = file.read()
+    error_message = 'API rate limit exceeded'
+    if error_message in contents:
+        print('\nError: REST API rate limit exceeded. See index.html for details.')
+        print('Website generation failed.\n')
+        raise ValueError

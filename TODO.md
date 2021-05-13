@@ -1,7 +1,6 @@
 # TODO
 
 * change the internal links from section symbol to note title. keep a section symbol in front?
-* create a function that checks whether the output of gh_md_to_html is the REST API error message. warn the user if site generation failed.
 * create another script to check for link rot, especially for internal links. list all zettels on index.md.
 
 ## if more speed is needed
