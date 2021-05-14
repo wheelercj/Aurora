@@ -180,9 +180,9 @@ def replace_pattern(pattern, replacement, file_paths, encoding='utf8'):
 
         # Put back the code blocks.
         for single_code_block in single_code_blocks:
-            new_contents = re.sub(r'␞', single_code_block, new_contents, count=1)
+            new_contents = re.sub(r'␞', single_code_block.replace('\\', r'\\'), new_contents, count=1)
         for triple_code_block in triple_code_blocks:
-            new_contents = re.sub(r'␝', triple_code_block[0], new_contents, count=1)
+            new_contents = re.sub(r'␝', triple_code_block[0].replace('\\', r'\\'), new_contents, count=1)
         
         # Save changes.
         if n_replaced > 0:
