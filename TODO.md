@@ -1,5 +1,6 @@
 # TODO
 
+* Figure out why all the HTML files are ending up with a line of unrenderable characters at the top of each file.
 * Change the internal links from section symbol to note title. Keep a section symbol in front?
 * Create another script to check for link rot, especially for internal links. List all zettels on index.md?
 * The only thing that should affect code blocks and HTML comments throughout the entire program is the conversion from markdown to HTML. Prevent searching for attachment links in those. Is my current approach of temporarily removing code blocks the best choice?
