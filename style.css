@@ -43,3 +43,7 @@ footer {
 h1 {
     padding-bottom: 3%;
 }
+code {
+    background-color: rgb(231, 231, 231);
+    padding: 2px;
+}
