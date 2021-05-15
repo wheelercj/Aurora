@@ -95,11 +95,14 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
 
     print('Removing some unwanted CSS that was added by gh_md_to_html.')
     remove_css(all_html_paths)
-    replace_str('<div class="highlight ', '<div class="', all_html_paths)
+    if not replace_str('<div class="highlight ', '<div class="', all_html_paths):
+        input('Warning: could not find an HTML string that was expected: `<div class="highlight `')
 
     print('Fixing some broken CSS that was added by gh_md_to_html.')
-    replace_str('<div class="highlight-source-c++">', '<div class="highlight-source-cpp">', all_html_paths)
-    replace_str('<link href="/github-markdown-css/github-css.css" rel="stylesheet">', '<link href="github-markdown-css/github-css.css" rel="stylesheet">', all_html_paths)
+    if not replace_str('<div class="highlight-source-c++">', '<div class="highlight-source-cpp">', all_html_paths):
+        input('Warning: could not find an HTML string that was expected: <div class="highlight-source-c++">')
+    if not replace_str('href="/github-markdown-css/github-css.css"', 'href="github-markdown-css/github-css.css"', all_html_paths):
+        input('Warning: could not find an HTML string that was expected: href="/github-markdown-css/github-css.css"')
 
     print('Inserting the site header, footer, etc. into each html file.')
     append_html('index.html', f'<br><br><br><br><br><br><br><p style="text-align: center">{copyright_text}</p>')
