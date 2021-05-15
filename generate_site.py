@@ -47,7 +47,7 @@ def main(site_path, zettelkasten_path, website_title, copyright_text, hide_tags)
 
     if (hide_tags):
         # Remove all tags.
-        tag_pattern = r'#[^#\s\)]+(?=[\n\s])'
+        tag_pattern = r'(?<=\s)#[a-zA-Z0-9_-]+'
         n = replace_pattern(tag_pattern, '', new_zettel_paths)
         print(f'Removed {n} tags.')
 
