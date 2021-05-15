@@ -51,3 +51,7 @@ code {
     background-color: rgb(231, 231, 231);
     padding: 5px;
 }
+blockquote {
+    border-left:10px solid #ccc;
+    padding: 10px;
+}
