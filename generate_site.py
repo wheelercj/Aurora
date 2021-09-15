@@ -2,26 +2,27 @@
 import os
 import re
 import shutil
-import gh_md_to_html
+import gh_md_to_html  # https://pypi.org/project/gh-md-to-html/
 import datetime
 from typing import List
+from copy import copy
 
 # internal imports
-from convert_links import zk_to_md
+from convert_links import convert_links_from_zk_to_md
 
 
-def main(site_path,
-         zettelkasten_path,
-         website_title,
-         copyright_text,
-         hide_tags):
+def main(site_path: str,
+         zettelkasten_path: str,
+         website_title: str,
+         copyright_text: str,
+         hide_tags: bool):
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
         raise ValueError
 
     site_posts_path = site_path
-    # More changes to the code needed to have some of the files at a 
-    # different location.
+    # TODO: more changes to the code needed to have some of the files at 
+    # a different location.
     # site_posts_path = site_path + '/posts'
 
     print('Finding zettels that contain `#published`.')
@@ -36,27 +37,14 @@ def main(site_path,
                                                    site_posts_path)
 
     print('Searching for any attachments that are linked to in the zettels.')
-    copy_attachments(zettel_paths, site_posts_path)
+    n = copy_attachments(zettel_paths, site_posts_path)
+    print(f'Found {n} attachments and copied them to {site_posts_path}')
 
-    make_file_paths_absolute(new_zettel_paths)
+    reformat_zettels(new_zettel_paths, hide_tags)
+    new_html_paths = regenerate_html_files(new_zettel_paths, site_posts_path)
 
-    if (hide_tags):
-        remove_all_tags(new_zettel_paths)
-
-    print(f'Converting internal links from the zk to the md format.')
-    n = zk_to_md(new_zettel_paths)
-    print(f'Converted {n} internal links from the zk to the md format.')
-
-    redirect_links_from_md_to_html(new_zettel_paths)
-
-    # Get a list of any HTML files that already exist, to compare later.
-    old_html_paths = get_file_paths(site_posts_path, '.html')
-
-    print('Creating html files from the md files.')
-    all_html_paths = create_html_files(new_zettel_paths, site_posts_path)
-
-    fix_image_links(all_html_paths)
-    n = convert_attachment_links(all_html_paths)
+    fix_image_links(new_html_paths)
+    n = convert_attachment_links(new_html_paths)
     print(f'Converted {n} attachment links from the md to the html format.')
 
     # TODO: create a posts folder. Only index.html and about.html should
@@ -73,21 +61,20 @@ def main(site_path,
     #             all_html_paths.remove(path)
     #             print(f'Moved {file_name} to the root folder.')
 
-    remove_unwanted_css(all_html_paths)
+    remove_unwanted_css(new_html_paths)
     if not replace_str('<div class="highlight ',
                        '<div class="',
-                       all_html_paths):
+                       new_html_paths):
         input('Warning: could not find an HTML string that was expected: ' \
             '`<div class="highlight `')
 
     print('Fixing some broken CSS that was added by gh_md_to_html.')
-    fix_broken_css(all_html_paths)
+    fix_broken_css(new_html_paths)
 
     print('Inserting the site header, footer, etc. into each html file.')
     append_html('index.html',
         '<br><br><br><br><br><br><br><p style="text-align: ' \
         f'center">{copyright_text}</p>')
-    new_html_paths = get_new_html_paths(zettel_paths, site_posts_path)
     wrap_template_html(new_html_paths, website_title)
 
     # TODO: if I can't use the gh_md_to_html option to not add extra 
@@ -99,11 +86,39 @@ def main(site_path,
     print('Checking for style.css.')
     check_style(site_path)
 
+    print('\nWebsite generation complete.\n')
+    print('New HTML files:')
+    for path in new_html_paths:
+        print(f'  {path}')
+
+
+def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
+    """Convert any file links to absolute markdown-style HTML links
+    
+    Also, remove all tags from the files if hide_tags is True.
+    """
+    make_file_paths_absolute(new_zettel_paths)
+    if (hide_tags):
+        remove_all_tags(new_zettel_paths)
+    convert_links_from_zk_to_md(new_zettel_paths)
+    redirect_links_from_md_to_html(new_zettel_paths)
+
+
+def regenerate_html_files(new_zettel_paths: List[str],
+                          site_posts_path: str) -> List[str]:
+    """Creates new and deletes old HTML files"""
+    old_html_paths = get_file_paths(site_posts_path, '.html')
+    print('Creating html files from the md files.')
+    create_html_files(new_zettel_paths, site_posts_path)
+    check_for_rate_limit_error()
+    all_html_paths = get_file_paths(site_posts_path, '.html')
+    new_html_paths = remove_elements(all_html_paths, old_html_paths)
+
     print('Deleting any HTML files that were not just generated and were not' \
         ' listed in ssg-ignore.txt.')
     delete_old_html_files(old_html_paths, all_html_paths, site_path)
 
-    print('\nWebsite generation complete.\n')
+    return new_html_paths
 
 
 def convert_attachment_links(all_html_paths: List[str]) -> int:
@@ -133,16 +148,11 @@ def fix_image_links(all_html_paths: List[str]) -> None:
 
 
 def create_html_files(new_zettel_paths: List[str],
-                      site_posts_path: str) -> List[str]:
-    """Creates HTML files from markdown files into the site folder.
-    
-    Raises ValueError if the REST API rate limit was exceeded.
-    """
+                      site_posts_path: str) -> None:
+    """Creates HTML files from markdown files into the site folder."""
     for zettel_path in new_zettel_paths:
-        gh_md_to_html.main(zettel_path, destination=site_path)
-    all_html_paths = get_file_paths(site_posts_path, '.html')
-    check_rate_limit()
-    return all_html_paths
+        gh_md_to_html.core_converter.markdown(zettel_path,
+                                              destination=site_path)
 
 
 def redirect_links_from_md_to_html(new_zettel_paths: List[str]) -> None:
@@ -174,17 +184,17 @@ def fix_broken_css(all_html_paths: List[str]) -> None:
             'href="/github-markdown-css/github-css.css"')
 
 
-def copy_attachments(zettel_paths: List[str], site_posts_path: str) -> None:
+def copy_attachments(zettel_paths: List[str], site_posts_path: str) -> int:
     """Copies files linked to in the zettels into the site folder."""
     attachment_paths = get_attachment_paths(zettel_paths)
-    print(f'Found {len(attachment_paths)} attachments. Copying to ' \
-        f'{site_posts_path}')
     for path in attachment_paths:
         try:
             shutil.copy(path, site_posts_path)
         except shutil.SameFileError:
             _, file_name = os.path.split(path)
             print(f'  Did not copy {file_name} because it is already there.')
+
+    return len(attachment_paths)
 
 
 def copy_zettels_to_site_folder(zettel_paths: List[str],
@@ -320,6 +330,13 @@ def replace_pattern(pattern: str,
     return total_replaced
 
 
+def remove_elements(superlist: list, sublist: list) -> list:
+    """Removes multiple elements from a list"""
+    for value in copy(sublist):
+        superlist.remove(value)
+    return superlist
+
+
 def get_zettels_to_publish(dir_path: str) -> List[str]:
     """Finds all the zettels that contain '#published'."""
     zettel_paths = get_file_paths(dir_path, '.md')
@@ -343,22 +360,6 @@ def delete_site_md_files(site_posts_path: str) -> None:
     md_paths = get_file_paths(site_posts_path, '.md')
     for path in md_paths:
         os.remove(path)
-
-
-def get_new_html_paths(zettel_paths: List[str],
-                       site_posts_path: str) -> List[str]:
-    """Gets the paths of all HTML files in the site folder
-    
-    Assumes all the HTML files were generated from markdown files.
-    """
-    new_html_paths = []
-    for path in zettel_paths:
-        zettel_name = os.path.basename(path)
-        html_name = zettel_name[:-2] + 'html'
-        html_path = os.path.join(site_posts_path, html_name)
-        new_html_paths.append(html_path)
-
-    return new_html_paths
 
 
 def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
@@ -485,7 +486,7 @@ def delete_old_html_files(old_html_paths: List[str],
         print(f'  Deleted {old_count} files.')
 
 
-def check_rate_limit() -> None:
+def check_for_rate_limit_error() -> None:
     '''Check whether the REST API rate limit was exceeded
     
     This function opens index.html and searches for an error message.

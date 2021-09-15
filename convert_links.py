@@ -7,23 +7,27 @@
 
 # External imports.
 import re
-import sys
+from typing import List
 
 
-def zk_to_md(zettel_paths):
-    return convert(r'\[\[(\d{14})\]\]', r'[[§]](\1.md)', zettel_paths)
+def convert_links_from_zk_to_md(zettel_paths: List[str]) -> None:
+    print(f'Converting internal links from the zk to the md format.')
+    n = convert(r'\[\[(\d{14})\]\]', r'[[§]](\1.md)', zettel_paths)
+    print(f'Converted {n} internal links from the zk to the md format.')
 
 
-def md_to_zk(zettel_paths):
-    return convert(r'\[\[§\]\]\((\d{14})\.md\)', r'[[\1]]', zettel_paths)
+def convert_links_from_md_to_zk(zettel_paths: List[str]) -> None:
+    convert(r'\[\[§\]\]\((\d{14})\.md\)', r'[[\1]]', zettel_paths)
 
 
-# Parameters:
-# old_link_pattern is the regex pattern of the current links.
-# new_link_name is the string that all the links will be changed to,
-#   which can contain references to groups in old_link_pattern.
-# zettel_paths is a list of paths to all the zettels to convert links in.
-def convert(old_link_pattern, new_link_name, zettel_paths):
+def convert(current_link_pattern: str,
+            new_link: str,
+            zettel_paths: List[str]) -> int:
+    """Converts file links in multiple zettels from a pattern to a string
+    
+    The new_link string can contain references to pattern groups in
+    current_link_pattern.
+    """
     zettel_count = len(zettel_paths)
     total_char_count = 0
     total_n_replaced = 0
@@ -35,7 +39,9 @@ def convert(old_link_pattern, new_link_name, zettel_paths):
             char_count_1 = len(contents)
 
             # Use regex to find the links, and then convert them.
-            new_contents, n_replaced = re.subn(old_link_pattern, new_link_name, contents)
+            new_contents, n_replaced = re.subn(current_link_pattern,
+                                               new_link,
+                                               contents)
             char_count_2 = len(new_contents)
 
             # Save contents back to the zettel.
@@ -46,13 +52,17 @@ def convert(old_link_pattern, new_link_name, zettel_paths):
             # Print character change stats.
             char_count = char_count_2 - char_count_1
             if n_replaced:
-                print(f'    Changed {zettel.name} by {char_count} characters with {n_replaced} links converted.')
+                print(f'    Changed {zettel.name} by {char_count} ' \
+                    f'characters with {n_replaced} links converted.')
             total_char_count += char_count
             total_n_replaced += n_replaced
 
         except OSError:
             print(f'Zettel not found: {zettel_path}')
 
-    print(f'  Changed {zettel_count} zettels by a total of', end='', flush=True)
-    print(f' {total_char_count} characters with {total_n_replaced} links converted.')
+    print(f'  Changed {zettel_count} zettels by a total of',
+        end='',
+        flush=True)
+    print(f' {total_char_count} characters with {total_n_replaced} links ' \
+        'converted.')
     return total_n_replaced
