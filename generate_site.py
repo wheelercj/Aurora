@@ -74,9 +74,11 @@ def main(site_path: str,
     check_style(site_path)
 
     print('\nWebsite generation complete.\n')
-    print('New HTML files:')
+    print('Generated HTML files:')
     for path in new_html_paths:
         print(f'  {path}')
+
+    print(f'{len(new_html_paths)} HTML files generated.')
 
 
 def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
