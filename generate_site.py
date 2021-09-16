@@ -5,7 +5,6 @@ import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 import datetime
 from typing import List
-from copy import copy
 
 # internal imports
 from convert_links import convert_links_from_zk_to_md
