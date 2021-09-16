@@ -321,6 +321,7 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
     """Finds all the zettels that contain '#published'."""
     zettel_paths = get_file_paths(dir_path, '.md')
     zettels_to_publish = []
+    published_tag_pattern = re.compile(r'(?<=\s)#published(?=\s)')
 
     for zettel_path in zettel_paths:
         with open(zettel_path, 'r', encoding='utf8') as zettel:
@@ -329,8 +330,9 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
             except UnicodeDecodeError:
                 print(f'UnicodeDecodeError in file {zettel_path}')
                 raise
-        if '#published' in contents:
 
+        match = published_tag_pattern.search(contents)
+        if match:
             zettels_to_publish.append(zettel_path)
 
     return zettels_to_publish
