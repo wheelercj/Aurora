@@ -27,9 +27,7 @@ def main(site_path: str,
     print('Finding zettels that contain `#published`.')
     zettel_paths = get_zettels_to_publish(zettelkasten_path)
     print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
-
-    # TODO: find zettels that are not linked to in any other zettels.
-    # Raise ValueError if any are found.
+    find_unlinked_zettels(zettel_paths)
     
     print('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
@@ -336,6 +334,40 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
             zettels_to_publish.append(zettel_path)
 
     return zettels_to_publish
+
+
+def find_unlinked_zettels(zettel_paths: List[str]) -> None:
+    """Raises ValueError if any zettel is not linked to in index.md."""
+    zettel_ids = remove_alpha_names(get_zettel_names(zettel_paths))
+    for path in zettel_paths:
+        with open(path, 'r', encoding='utf8') as file:
+            contents = file.read()
+        for zettel_id in zettel_ids:
+            zettel_link = '[[' + zettel_id + ']]'
+            if zettel_link in contents:
+                zettel_ids.remove(zettel_id)
+    if zettel_ids:
+        n = len(zettel_ids)
+        raise ValueError(f'{n} zettels have not been linked to in ' \
+            f'index.md. Their IDs are:\n{"\n".join(zettel_ids)}')
+
+
+def get_zettel_names(zettel_paths: List[str]) -> List[str]:
+    """Gets zettel file names from their paths."""
+    zettel_names = []
+    for path in zettel_paths:
+        zettel_id, _ = os.path.splitext(path)
+        zettel_names.append(zettel_id)
+    return zettel_names
+
+
+def remove_alpha_names(strings: List[str]) -> List[str]:
+    """Removes any strings that contain alpha characters."""
+    numeric_strings = []
+    for s in strings:
+        if s.isnumeric():
+            numeric_strings.append(s)
+    return numeric_strings
 
 
 def delete_site_md_files(site_posts_path: str) -> None:
