@@ -2,7 +2,7 @@
 import os
 import re
 import shutil
-import gh_md_to_html  # https://pypi.org/project/gh-md-to-html/
+from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 import datetime
 from typing import List
 from copy import copy
@@ -13,7 +13,7 @@ from convert_links import convert_links_from_zk_to_md
 
 def main(site_path: str,
          zettelkasten_path: str,
-         website_title: str,
+         site_title: str,
          copyright_text: str,
          hide_tags: bool):
     this_dir, _ = os.path.split(__file__)
@@ -28,6 +28,9 @@ def main(site_path: str,
     print('Finding zettels that contain `#published`.')
     zettel_paths = get_zettels_to_publish(zettelkasten_path)
     print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
+
+    # TODO: find zettels that are not linked to in any other zettels.
+    # Raise ValueError if any are found.
     
     print('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
@@ -61,27 +64,11 @@ def main(site_path: str,
     #             all_html_paths.remove(path)
     #             print(f'Moved {file_name} to the root folder.')
 
-    remove_unwanted_css(new_html_paths)
-    if not replace_str('<div class="highlight ',
-                       '<div class="',
-                       new_html_paths):
-        input('Warning: could not find an HTML string that was expected: ' \
-            '`<div class="highlight `')
-
-    print('Fixing some broken CSS that was added by gh_md_to_html.')
-    fix_broken_css(new_html_paths)
-
     print('Inserting the site header, footer, etc. into each html file.')
     append_html('index.html',
         '<br><br><br><br><br><br><br><p style="text-align: ' \
         f'center">{copyright_text}</p>')
-    wrap_template_html(new_html_paths, website_title)
-
-    # TODO: if I can't use the gh_md_to_html option to not add extra 
-    # CSS, try overwriting their CSS instead of editing every HTML file 
-    # like with remove_css except the one line with a style tag.
-    # print('Overwriting github-css.css')
-    # overwrite_github_css_file(site_path)
+    wrap_template_html(new_html_paths, site_title)
 
     print('Checking for style.css.')
     check_style(site_path)
@@ -106,17 +93,19 @@ def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
 
 def regenerate_html_files(new_zettel_paths: List[str],
                           site_posts_path: str) -> List[str]:
-    """Creates new and deletes old HTML files"""
+    """Creates new and deletes old HTML files
+    
+    May overwrite some HTML files. Old HTML files that were listed in 
+    ssg-ignore.txt are saved and not changed at all.
+    """
     old_html_paths = get_file_paths(site_posts_path, '.html')
     print('Creating html files from the md files.')
-    create_html_files(new_zettel_paths, site_posts_path)
-    check_for_rate_limit_error()
+    new_html_paths = create_html_files(new_zettel_paths)
     all_html_paths = get_file_paths(site_posts_path, '.html')
-    new_html_paths = remove_elements(all_html_paths, old_html_paths)
 
     print('Deleting any HTML files that were not just generated and were not' \
         ' listed in ssg-ignore.txt.')
-    delete_old_html_files(old_html_paths, all_html_paths, site_path)
+    delete_old_html_files(old_html_paths, all_html_paths, site_posts_path)
 
     return new_html_paths
 
@@ -124,8 +113,7 @@ def regenerate_html_files(new_zettel_paths: List[str],
 def convert_attachment_links(all_html_paths: List[str]) -> int:
     """Converts any attachment links from the md to the html format
     
-    (gh_md_to_html doesn't do this.) Returns the number of links
-    converted.
+    Returns the number of links converted.
     """
     md_link_pattern = r'\[(.+)]\((.+)\)'
     n = replace_pattern(md_link_pattern,
@@ -135,9 +123,8 @@ def convert_attachment_links(all_html_paths: List[str]) -> int:
 
 
 def fix_image_links(all_html_paths: List[str]) -> None:
-    """Fixes image links that were not converted correctly
+    """Fixes any image links that were not converted correctly
     
-    gh_md_to_html doesn't seem to convert the image links correctly.
     `.png" src="/images/` must be changed to `.png" src="images/`.
     """
     incorrect_link_pattern = r'\.png\" src=\".+images/'
@@ -147,12 +134,37 @@ def fix_image_links(all_html_paths: List[str]) -> None:
     print(f'Fixed the src path of {n} image links.')
 
 
-def create_html_files(new_zettel_paths: List[str],
-                      site_posts_path: str) -> None:
-    """Creates HTML files from markdown files into the site folder."""
+def create_html_files(new_zettel_paths: List[str]) -> List[str]:
+    """Creates HTML files from markdown files into the site folder
+    
+    Expects the zettels to already be in the site folder.
+    """
+    new_html_files = []
     for zettel_path in new_zettel_paths:
-        gh_md_to_html.core_converter.markdown(zettel_path,
-                                              destination=site_path)
+        new_html_files.append(create_html_file(zettel_path))
+    return new_html_files
+
+
+def create_html_file(zettel_path: str) -> str:
+    """Creates one HTML file from a markdown file in the same folder
+    
+    Overwrites an HTML if it happens to have the same name. Returns the 
+    new HTML file's path.
+    """
+    with open(zettel_path, 'r', encoding='utf8') as file:
+        md_text = file.read()
+    html_text = HTMLConverter(md_text)
+    html_path = create_html_path(zettel_path)
+    with open(html_path, 'w', encoding='utf8') as file:
+        file.write(html_text)
+    return html_path
+
+
+def create_html_path(zettel_path: str) -> str:
+    """Creates an HTML file path from a corresponding md file path."""
+    file_path_and_name, _ = os.path.splitext(zettel_path)
+    new_html_path = file_path_and_name + '.html'
+    return new_html_path
 
 
 def redirect_links_from_md_to_html(new_zettel_paths: List[str]) -> None:
@@ -168,20 +180,6 @@ def make_file_paths_absolute(new_zettel_paths: List[str]) -> None:
     attachment_link_pattern = r'(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))'
     n = replace_pattern(attachment_link_pattern, r'\1', new_zettel_paths)
     print(f'Converted {n} absolute file paths to relative file paths.')
-
-
-def fix_broken_css(all_html_paths: List[str]) -> None:
-    """Fixes broken CSS that was added by gh_md_to_html."""
-    if not replace_str('<div class="highlight-source-c++">',
-                       '<div class="highlight-source-cpp">',
-                       all_html_paths):
-        input('Warning: could not find an HTML string that was expected: ' \
-            '<div class="highlight-source-c++">')
-    if not replace_str('href="/github-markdown-css/github-css.css"',
-                       'href="github-markdown-css/github-css.css"',
-                       all_html_paths):
-        input('Warning: could not find an HTML string that was expected: ' \
-            'href="/github-markdown-css/github-css.css"')
 
 
 def copy_attachments(zettel_paths: List[str], site_posts_path: str) -> int:
@@ -226,7 +224,7 @@ def append_html(file_name: str, html: str) -> None:
 
 
 def wrap_template_html(all_html_paths: List[str],
-                         website_title: str,
+                         site_title: str,
                          folder_name: str = '') -> None:
     """Wraps each HTML file's contents with a header and footer."""
     this_dir, _ = os.path.split(__file__)
@@ -235,18 +233,19 @@ def wrap_template_html(all_html_paths: List[str],
         with open(path, 'r+', encoding='utf8') as file:
             contents = file.read()
             file.truncate(0)
-            contents = get_header_html(folder_name, website_title) \
+            contents = get_header_html(folder_name, site_title) \
                 + contents \
                 + get_footer_html()
             file.write(contents)
 
 
-def get_header_html(folder: str, website_title: str) -> str:
+def get_header_html(folder: str, site_title: str) -> str:
     """Retrieves the site's header HTML from header.html."""
     with open('header.html', 'r', encoding='utf8') as file:
         header_html = file.read()
     header_html = header_html.replace('{folder}', folder)
-    header_html = header_html.replace('{website_title}', website_title)
+    header_html = header_html.replace('{site_title}', site_title)
+        # These strings are not supposed to be f-strings.
 
     return header_html
 
@@ -262,25 +261,11 @@ def get_footer_html(footer: str = '') -> str:
     return footer_html
 
 
-def replace_str(current: str,
-                replacement: str,
-                file_paths: List[str],
-                encoding: str = 'utf8') -> int:
-    """Replaces a string with a string in multiple files.
-    
-    Returns the total number of replacements.
-    """
-    return replace_pattern(re.escape(current),
-        replacement,
-        file_paths,
-        encoding)
-
-
 def replace_pattern(pattern: str,
                     replacement: str,
                     file_paths: List[str],
                     encoding: str = 'utf8') -> int:
-    """Replaces a regex pattern with a string in multiple files.
+    """Replaces a regex pattern with a string in multiple files
     
     Returns the total number of replacements.
     """
@@ -298,6 +283,7 @@ def replace_pattern(pattern: str,
                 raise e
 
         # Temporarily remove any code blocks from contents.
+        # TODO: use mistune's ast instead?
         triple_code_blocks = triple_code_block_pattern.findall(contents)
         if len(triple_code_blocks):
             contents = triple_code_block_pattern.sub('␝', contents)
@@ -330,13 +316,6 @@ def replace_pattern(pattern: str,
     return total_replaced
 
 
-def remove_elements(superlist: list, sublist: list) -> list:
-    """Removes multiple elements from a list"""
-    for value in copy(sublist):
-        superlist.remove(value)
-    return superlist
-
-
 def get_zettels_to_publish(dir_path: str) -> List[str]:
     """Finds all the zettels that contain '#published'."""
     zettel_paths = get_file_paths(dir_path, '.md')
@@ -346,10 +325,11 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
         with open(zettel_path, 'r', encoding='utf8') as zettel:
             try:
                 contents = zettel.read()
-            except UnicodeDecodeError as e:
+            except UnicodeDecodeError:
                 print(f'UnicodeDecodeError in file {zettel_path}')
-                raise e
+                raise
         if '#published' in contents:
+
             zettels_to_publish.append(zettel_path)
 
     return zettels_to_publish
@@ -363,7 +343,7 @@ def delete_site_md_files(site_posts_path: str) -> None:
 
 
 def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
-    """Gets the paths of files in a directory.
+    """Gets the paths of files in a directory
     
     Only paths of files with the given file extension are included.
     """
@@ -396,45 +376,6 @@ def get_attachment_paths(zettel_paths: List[str]) -> List[str]:
     return attachment_paths
 
 
-def remove_unwanted_css(all_html_paths: List[str]) -> None:
-    """Remove unwanted CSS that was inserted by gh_md_to_html
-    
-    Some of the CSS is removed by removing HTML.
-    """
-    print('Removing some unwanted CSS that was added by gh_md_to_html.')
-    strings_to_delete = [
-        '<div class="js-gist-file-update-container js-task-list-container ' \
-            'file-box">',
-        '<div class="Box-body readme blob js-code-block-container p-5 ' \
-            'p-xl-6" id="file-docker-image-pull-md-readme" ' \
-            'style="margin-left: 40px; margin-right: 40px; margin-top: ' \
-            '20px; margin-bottom: 20px">',
-        '<div class="gist-data">',
-        '<div class="gist-file">',
-        '<article class="markdown-body entry-content container-lg" ' \
-            'itemprop="text">',
-        '</article>\n</div>\n</div>\n</div>\n</div>',
-    ]
-
-    for path in all_html_paths:
-        with open(path, 'r', encoding='utf8') as file:
-            contents = file.read()
-        for string in strings_to_delete:
-            contents = contents.replace(string, '')
-        with open(path, 'w', encoding='utf8') as file:
-            file.write(contents)
-
-
-def overwrite_github_css_file(site_path: str) -> None:
-    """Copies my own CSS file into the site folder
-    
-    Overwrites any github-css.css file already there."""
-    site_style_folder = os.path.join(site_path, 'github-markdown-css')
-    this_dir, _ = os.path.split(__file__)
-    this_style_path = os.path.join(this_dir, 'github-css.css')
-    shutil.copy(this_style_path, site_style_folder)
-
-
 def check_style(site_path: str) -> None:
     """Copy style.css into the site folder if it's not there already.
     
@@ -461,7 +402,7 @@ def delete_old_html_files(old_html_paths: List[str],
     absolute path on a new line in ssg-ignore.txt.
     '''
     file_name = os.path.join(site_path, 'ssg-ignore.txt')
-    with open(file_name, 'r') as file:
+    with open(file_name, 'r', encoding='utf8') as file:
         ignored_html_paths = file.read().split('\n')
 
     # Make sure all the slashes in all the paths are the same.
@@ -486,32 +427,19 @@ def delete_old_html_files(old_html_paths: List[str],
         print(f'  Deleted {old_count} files.')
 
 
-def check_for_rate_limit_error() -> None:
-    '''Check whether the REST API rate limit was exceeded
-    
-    This function opens index.html and searches for an error message.
-    Raises ValueError if the REST API rate limit was exceeded.
-    '''
-    with open('index.html', 'r', encoding='utf8') as file:
-        contents = file.read()
-    error_message = 'API rate limit exceeded'
-    if error_message in contents:
-        print('\nError: REST API rate limit exceeded. See index.html for ' \
-            'details.')
-        print('Website generation failed.\n')
-        raise ValueError
-
-
 if __name__ == '__main__':
-    zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-    site_path = 'C:/Users/chris/Documents/blog'
-    website_title = "Chris' notes"
-    copyright_text = '© 2021 Chris Wheeler'
-    hide_tags = True  # If true, removes tags from the copied zettels 
-        # when generating the site.
+    # zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
+    # site_path = 'C:/Users/chris/Documents/blog'
+    # site_title = "Chris' notes"
+    # copyright_text = '© 2021 Chris Wheeler'
+    # hide_tags = True  # If true, tags will be removed from the copied 
+        ## zettels when generating the site.
+    
+    # main(site_path,
+    #      zettelkasten_path,
+    #      site_title,
+    #      copyright_text,
+    #      hide_tags)
 
-    main(site_path,
-        zettelkasten_path,
-        website_title,
-        copyright_text,
-        hide_tags)
+    raise ValueError('Edit the comments above this line of code and delete ' \
+        'this line of code that raises ValueError to use this program.')

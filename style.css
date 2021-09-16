@@ -1,6 +1,6 @@
-/* Changes made to the copy of this file in the same folder as generate_site.py
-will not be automatically carried over to the copy in the site folder if it
-already exists there. */
+/* Changes made to the copy of this file in the same folder as 
+generate_site.py will not be automatically carried over to the copy in 
+the site folder if it already exists there. */
 
 .title {
     text-align: left;
@@ -44,12 +44,9 @@ h1 {
     padding-bottom: 3%;
 }
 code {
-    background-color: rgb(231, 231, 231);
-    padding: 2px;
-}
-.highlight-source-cpp {
-    background-color: rgb(231, 231, 231);
+    background-color: rgb(230, 230, 230);
     padding: 5px;
+    display: inline-block;
 }
 blockquote {
     border-left:10px solid #ccc;
