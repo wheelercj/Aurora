@@ -52,3 +52,6 @@ blockquote {
     border-left:10px solid #ccc;
     padding: 10px;
 }
+hr {
+    border: 1px solid gray;
+}

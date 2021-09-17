@@ -14,7 +14,8 @@ def main(site_path: str,
          zettelkasten_path: str,
          site_title: str,
          copyright_text: str,
-         hide_tags: bool):
+         hide_tags: bool,
+         append_index: bool):
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
         raise ValueError
@@ -27,7 +28,6 @@ def main(site_path: str,
     print('Finding zettels that contain `#published`.')
     zettel_paths = get_zettels_to_publish(zettelkasten_path)
     print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
-    find_unlinked_zettels(zettel_paths)
     
     print('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
@@ -35,6 +35,9 @@ def main(site_path: str,
     print(f'Copying the zettels to {site_posts_path}')
     new_zettel_paths = copy_zettels_to_site_folder(zettel_paths,
                                                    site_posts_path)
+    if append_index:
+        print('Creating an index of all the published zettels in index.md')
+        append_zettel_index(zettel_paths)
 
     print('Searching for any attachments that are linked to in the zettels.')
     n = copy_attachments(zettel_paths, site_posts_path)
@@ -336,38 +339,60 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
     return zettels_to_publish
 
 
-def find_unlinked_zettels(zettel_paths: List[str]) -> None:
-    """Raises ValueError if any zettel is not linked to in index.md."""
-    zettel_ids = remove_alpha_names(get_zettel_names(zettel_paths))
-    for path in zettel_paths:
-        with open(path, 'r', encoding='utf8') as file:
-            contents = file.read()
-        for zettel_id in zettel_ids:
-            zettel_link = '[[' + zettel_id + ']]'
-            if zettel_link in contents:
-                zettel_ids.remove(zettel_id)
-    if zettel_ids:
-        n = len(zettel_ids)
-        raise ValueError(f'{n} zettels have not been linked to in ' \
-            f'index.md. Their IDs are:\n{"\n".join(zettel_ids)}')
+def append_zettel_index(zettel_paths: List[str]) -> None:
+    """Lists all the zettels at the end of index.md."""
+    index_file_name = 'index.md'
+    new_index = create_zettel_index(zettel_paths)
+    with open(index_file_name, 'r', encoding='utf8') as file:
+        contents = file.read()
+    index_pattern = re.compile(r'(?<=\n)## index\n(\*\s\[\[\d{14}\]\]\s.+\n*)+')
+    new_contents, n = index_pattern.subn(new_index, contents, 1)
+    if not n:
+        new_contents = contents + '\n\n' + new_index
+    with open(index_file_name, 'w', encoding='utf8') as file:
+        file.write(new_contents)
 
 
-def get_zettel_names(zettel_paths: List[str]) -> List[str]:
-    """Gets zettel file names from their paths."""
-    zettel_names = []
-    for path in zettel_paths:
-        zettel_id, _ = os.path.splitext(path)
-        zettel_names.append(zettel_id)
-    return zettel_names
+def create_zettel_index(zettel_paths: List[str]) -> str:
+    """Creates a markdown list of all zettels' titles and links
+    
+    Excludes zettels that have alpha characters in their file names.
+    """
+    zettel_links = get_zettel_links(zettel_paths)
+    zettel_index = '\n\n---\n## index\n' + '\n'.join(zettel_links)
+    return zettel_index
 
 
-def remove_alpha_names(strings: List[str]) -> List[str]:
-    """Removes any strings that contain alpha characters."""
-    numeric_strings = []
-    for s in strings:
-        if s.isnumeric():
-            numeric_strings.append(s)
-    return numeric_strings
+def get_zettel_links(zettel_paths: List[str]) -> List[str]:
+    """Gets the links to all zettels with numeric file names
+    
+    The zettels are sorted alphabetically by title.
+    """
+    zettel_ids_and_titles: List[List[str, str]] = []
+    for zettel_path in zettel_paths:
+        _, file_name = os.path.split(zettel_path)
+        zettel_id, _ = os.path.splitext(file_name)
+        if zettel_id.isnumeric():
+            zettel_title = get_zettel_title(zettel_path)
+            zettel_ids_and_titles.append([zettel_id, zettel_title])
+
+    zettel_links = []
+    sorted_ids_and_titles = sorted(zettel_ids_and_titles,
+                                   key=lambda x: x[1].lower())
+    for z in sorted_ids_and_titles:
+        zettel_links.append(f'* [[{z[0]}]] {z[1]}')
+
+    return zettel_links
+
+
+def get_zettel_title(zettel_path: str) -> str:
+    """Gets a zettel's title (its first header level 1)."""
+    with open(zettel_path, 'r', encoding='utf8') as file:
+        contents = file.read()
+    match = re.search(r'(?<=#\s).+', contents)
+    if match:
+        return match[0]
+    raise ValueError('Each zettel needs a title.')
 
 
 def delete_site_md_files(site_posts_path: str) -> None:
@@ -412,7 +437,7 @@ def get_attachment_paths(zettel_paths: List[str]) -> List[str]:
 
 
 def check_style(site_path: str) -> None:
-    """Copy style.css into the site folder if it's not there already.
+    """Copy style.css into the site folder if it's not there already
     
     If style.css is already there, this function does nothing.
     """
@@ -469,12 +494,15 @@ if __name__ == '__main__':
     # copyright_text = '© 2021 Chris Wheeler'
     # hide_tags = True  # If true, tags will be removed from the copied 
         ## zettels when generating the site.
+    # append_index = True  # If true, a list of all zettels will be
+        ## displayed at the end of index.md.
     
     # main(site_path,
     #      zettelkasten_path,
     #      site_title,
     #      copyright_text,
-    #      hide_tags)
+    #      hide_tags,
+    #      append_index)
 
     raise ValueError('Edit the comments above this line of code and delete ' \
         'this line of code that raises ValueError to use this program.')
