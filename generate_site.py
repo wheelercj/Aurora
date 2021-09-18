@@ -10,15 +10,36 @@ from typing import List
 from convert_links import convert_links_from_zk_to_md
 
 
+def generate_site():
+    """Generates all the site's files."""
+    zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
+    site_path = 'C:/Users/chris/Documents/blog'
+    site_title = "Chris' notes"
+    copyright_text = '© 2021 Chris Wheeler'
+    hide_tags = True   # If true, tags will be removed from the copied 
+            # zettels when generating the site.
+    append_index = True  # If true, a list of all zettels will be
+            # displayed at the end of index.md.
+
+    main(site_path,
+        zettelkasten_path,
+        site_title,
+        copyright_text,
+        hide_tags,
+        append_index)
+
+
 def main(site_path: str,
          zettelkasten_path: str,
          site_title: str,
          copyright_text: str,
          hide_tags: bool,
          append_index: bool):
+    """Generates all the site's files."""
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
-        raise ValueError
+        raise ValueError('The zettelkasten, the website\'s files, and this ' \
+            'program\'s files should probably be in different folders.')
 
     site_posts_path = site_path
     # TODO: more changes to the code needed to have some of the files at 
@@ -488,21 +509,4 @@ def delete_old_html_files(old_html_paths: List[str],
 
 
 if __name__ == '__main__':
-    # zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-    # site_path = 'C:/Users/chris/Documents/blog'
-    # site_title = "Chris' notes"
-    # copyright_text = '© 2021 Chris Wheeler'
-    # hide_tags = True  # If true, tags will be removed from the copied 
-        ## zettels when generating the site.
-    # append_index = True  # If true, a list of all zettels will be
-        ## displayed at the end of index.md.
-    
-    # main(site_path,
-    #      zettelkasten_path,
-    #      site_title,
-    #      copyright_text,
-    #      hide_tags,
-    #      append_index)
-
-    raise ValueError('Edit the comments above this line of code and delete ' \
-        'this line of code that raises ValueError to use this program.')
+    generate_site()
