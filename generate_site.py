@@ -56,6 +56,7 @@ def main(site_path: str,
     print(f'Copying the zettels to {site_posts_path}')
     new_zettel_paths = copy_zettels_to_site_folder(zettel_paths,
                                                    site_posts_path)
+
     if append_index:
         print('Creating an index of all the published zettels in index.md')
         append_zettel_index(zettel_paths)
@@ -94,12 +95,12 @@ def main(site_path: str,
     print('Checking for style.css.')
     check_style(site_path)
 
-    print('\nWebsite generation complete.\n')
-    print('Generated HTML files:')
+    print('\nGenerated HTML files:')
     for path in new_html_paths:
         print(f'  {path}')
 
     print(f'{len(new_html_paths)} HTML files generated.')
+    print('\nWebsite generation complete.\n')
 
 
 def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
@@ -150,6 +151,9 @@ def fix_image_links(all_html_paths: List[str]) -> None:
     
     `.png" src="/images/` must be changed to `.png" src="images/`.
     """
+    # This function might not be needed anymore. I originally wrote this
+    # because I was using gh_md_to_html, which didn't convert some 
+    # things correctly (including image links).
     incorrect_link_pattern = r'\.png\" src=\".+images/'
     n = replace_pattern(incorrect_link_pattern,
                         '.png" src="images/',
@@ -284,7 +288,7 @@ def get_footer_html(footer: str = '') -> str:
     return footer_html
 
 
-def replace_pattern(pattern: str,
+def replace_pattern(uncompiled_pattern: str,
                     replacement: str,
                     file_paths: List[str],
                     encoding: str = 'utf8') -> int:
@@ -293,7 +297,7 @@ def replace_pattern(pattern: str,
     Returns the total number of replacements.
     """
     total_replaced = 0
-    chosen_pattern = re.compile(pattern)
+    chosen_pattern = re.compile(uncompiled_pattern)
     triple_code_block_pattern = re.compile(r'(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})')
     single_code_block_pattern = re.compile(r'(`[^`]+?`)')
     
