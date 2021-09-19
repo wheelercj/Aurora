@@ -520,8 +520,12 @@ def delete_old_html_files(old_html_paths: List[str],
     absolute path on a new line in ssg-ignore.txt.
     '''
     file_name = os.path.join(site_path, 'ssg-ignore.txt')
-    with open(file_name, 'r', encoding='utf8') as file:
-        ignored_html_paths = file.read().split('\n')
+    try:
+        with open(file_name, 'r', encoding='utf8') as file:
+            ignored_html_paths = file.read().split('\n')
+    except FileNotFoundError:
+        print('  ssg-ignore.txt not found')
+        return
 
     # Make sure all the slashes in all the paths are the same.
     for path in ignored_html_paths:
