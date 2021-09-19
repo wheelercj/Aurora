@@ -1,4 +1,4 @@
-# zk_ssg
+# zk-ssg
 
 This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.com/posts/slip-box/), which means it converts markdown-based zettelkastens into fully functional HTML and CSS files that can be immediately published as a website. Most of the files in the site folder get overwritten each time this program runs. This program **never** makes any changes to the files in the zettelkasten; it only copies the relevant files to the site folder and works with those copies.
 
