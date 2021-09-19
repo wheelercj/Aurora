@@ -5,6 +5,7 @@ import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 import datetime
 from typing import List
+from functools import cache
 
 # internal imports
 from convert_links import convert_links_from_zk_to_md
@@ -235,7 +236,7 @@ def copy_zettels_to_site_folder(zettel_paths: List[str],
 
 
 def remove_all_tags(new_zettel_paths: List[str]) -> None:
-    """Removes all tags from the zettels.
+    """Removes all tags from the zettels
     
     Prints a message saying how many tags were removed.
     """
@@ -267,6 +268,7 @@ def wrap_template_html(all_html_paths: List[str],
             file.write(header_html + contents + footer_html)
 
 
+@cache
 def get_header_html(folder: str, site_title: str) -> str:
     """Retrieves the site's header HTML from header.html."""
     with open('header.html', 'r', encoding='utf8') as file:
@@ -278,6 +280,7 @@ def get_header_html(folder: str, site_title: str) -> str:
     return header_html
 
 
+@cache
 def get_footer_html(footer: str = '') -> str:
     """Retrieves the site's footer HTML from footer.html."""
     time_now = str(datetime.datetime.now())
@@ -285,6 +288,7 @@ def get_footer_html(footer: str = '') -> str:
         footer_html = file.read()
     footer_html = footer_html.replace('{footer}', footer)
     footer_html = footer_html.replace('{time_now}', time_now)
+        # These strings are not supposed to be f-strings.
 
     return footer_html
 
