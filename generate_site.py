@@ -260,10 +260,11 @@ def wrap_template_html(all_html_paths: List[str],
         with open(path, 'r+', encoding='utf8') as file:
             contents = file.read()
             file.truncate(0)
-            contents = get_header_html(folder_name, site_title) \
-                + contents \
-                + get_footer_html()
-            file.write(contents)
+            file.seek(0)  # Without this, \x00 would be inserted into
+                # the front of the file.
+            header_html = get_header_html(folder_name, site_title)
+            footer_html = get_footer_html()
+            file.write(header_html + contents + footer_html)
 
 
 def get_header_html(folder: str, site_title: str) -> str:
