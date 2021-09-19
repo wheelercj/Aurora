@@ -50,6 +50,7 @@ def main(site_path: str,
     print('Finding zettels that contain `#published`.')
     zettel_paths = get_zettels_to_publish(zettelkasten_path)
     print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
+    check_links(zettel_paths)
     
     print('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
@@ -102,6 +103,30 @@ def main(site_path: str,
 
     print(f'{len(new_html_paths)} HTML files generated.')
     print('\nWebsite generation complete.\n')
+
+
+def check_links(zettel_paths: List[str]) -> None:
+    """Raises ValueError if any zettel links are broken."""
+    valid_zettel_ids = get_zettel_ids(zettel_paths)
+    zettel_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
+    for zettel_path in zettel_paths:
+        with open(zettel_path, 'r', encoding='utf8') as file:
+            contents = file.read()
+        ids = zettel_id_pattern.findall(contents)
+        for id in ids:
+            if id not in valid_zettel_ids:
+                raise ValueError(f'Zettel with ID {id} cannot be found' \
+                    f' but has been linked to in {zettel_path}')
+
+
+def get_zettel_ids(zettel_paths: List[str]) -> List[str]:
+    """Gets all the zettel IDs from their paths."""
+    zettel_ids = []
+    for zettel_path in zettel_paths:
+        _, name_and_extension = os.path.split(zettel_path)
+        name, _ = os.path.splitext(name_and_extension)
+        zettel_ids.append(name)
+    return zettel_ids
 
 
 def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
