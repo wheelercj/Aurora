@@ -58,13 +58,15 @@ def main(site_path: str,
     print(f'Copying the zettels to {site_posts_path}')
     new_zettel_paths = copy_zettels_to_site_folder(zettel_paths,
                                                    site_posts_path)
+    del zettel_paths  # to reduce the chance of accidentally changing 
+        # the zettelkasten.
 
     if append_index:
         print('Creating an index of all the published zettels in index.md')
-        append_zettel_index(zettel_paths)
+        append_zettel_index(new_zettel_paths)
 
     print('Searching for any attachments that are linked to in the zettels.')
-    n = copy_attachments(zettel_paths, site_posts_path)
+    n = copy_attachments(new_zettel_paths, site_posts_path)
     print(f'Found {n} attachments and copied them to {site_posts_path}')
 
     reformat_zettels(new_zettel_paths, hide_tags)
