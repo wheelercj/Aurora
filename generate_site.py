@@ -3,8 +3,10 @@ import os
 import re
 import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
+from pygments import highlight, lexers  # https://pygments.org/
+from pygments.formatters import HtmlFormatter
 import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Any
 from functools import cache
 
 # internal imports
@@ -76,6 +78,9 @@ def main(site_path: str,
     n = convert_attachment_links(new_html_paths)
     print(f'Converted {n} attachment links from the md to the html format.')
 
+    print('Adding syntax highlighting to code in codeblocks.')
+    syntax_highlight_code(new_html_paths)
+
     # TODO: create a posts folder. Only index.html and about.html should
     # be in the root folder.
     # Move index.html and about.html to the root folder.
@@ -105,6 +110,77 @@ def main(site_path: str,
 
     print(f'{len(new_html_paths)} HTML files generated.')
     print('\nWebsite generation complete.\n')
+
+
+def syntax_highlight_code(html_paths: List[str]) -> None:
+    """Adds syntax highlighting to code inside all HTML codeblocks."""
+    formatter = HtmlFormatter(linenos=True, cssclass='source')
+    cb_pattern = re.compile(r'<code[^<]+</code>')
+    cb_lang_pattern = re.compile(r'(?<=<code class=").+(?=">)')
+    cb_contents_pattern = re.compile(r'(?<=>)[^<]+(?=</code>)')
+
+    for html_path in html_paths:
+        with open(html_path, 'r+', encoding='utf8') as file:
+            contents = file.read()
+            codeblocks: List[str] = cb_pattern.findall(contents)
+            for codeblock in codeblocks:
+                language: re.Match = cb_lang_pattern.search(codeblock)
+                lexer = None
+                if language:
+                    lexer = get_lexer(language[0])
+                if lexer:
+                    cb_contents_match = cb_contents_pattern.search(codeblock)
+                    contents = highlight_codeblock(cb_contents_match,
+                                                   lexer,
+                                                   formatter,
+                                                   contents)
+
+            file.truncate(0)
+            file.seek(0)
+            file.write(contents)
+
+
+def highlight_codeblock(cb_contents_match: re.Match,
+                        lexer: Any,
+                        formatter,
+                        contents: str) -> str:
+    """Adds syntax highlighting to the code inside an HTML codeblock
+    
+    Assumes the given lexer is valid. Returns contents unchanged if
+    cb_contents_match is None.
+    """
+    if cb_contents_match:
+        plain_codeblock = revert_html(cb_contents_match[0])
+        result = highlight(plain_codeblock, lexer, formatter)
+        contents = contents.replace(cb_contents_match[0], result, 1)
+    return contents
+
+
+def get_lexer(language: str) -> Any:
+    """Gets a pygments lexer by name
+    
+    Returns None if a valid language is not found.
+    """
+    lexer = None
+    if language == 'lang-cpp':
+        lexer = lexers.get_lexer_by_name('c++')
+
+    return lexer
+
+
+def revert_html(codeblock: str) -> str:
+    """Converts certain HTML strings back to plaintext
+    
+    For example, `&lt;` is converted back to `<`.
+    """
+    replacements = [
+        ('&lt;', '<'),
+        ('&gt;', '>'),
+        ('&quot;', '"'),
+        ('&#39;', "'")]
+    for replacement in replacements:
+        codeblock = codeblock.replace(replacement[0], replacement[1])
+    return codeblock
 
 
 def check_links(zettel_paths: List[str]) -> None:
