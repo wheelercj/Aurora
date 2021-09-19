@@ -4,7 +4,7 @@ import re
 import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 import datetime
-from typing import List
+from typing import List, Tuple
 from functools import cache
 
 # internal imports
@@ -478,19 +478,20 @@ def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
 
 def get_attachment_paths(zettel_paths: List[str]) -> List[str]:
     """Gets the file attachment links in multiple zettels."""
-    attachment_paths = []
-    new_attachment_groups = []
+    all_attachment_paths = []
+    file_attachment_groups: List[Tuple[str]] = []
 
     attachment_pattern = re.compile(r'(?<=]\()(.+\S\.(pdf|png))(?=\))')
     for zettel_path in zettel_paths:
         with open(zettel_path, 'r', encoding='utf8') as zettel:
             contents = zettel.read()
-        new_attachment_groups = attachment_pattern.findall(contents)
-        for group in new_attachment_groups:
+        file_attachment_groups: List[Tuple[str]] = \
+            attachment_pattern.findall(contents)
+        for group in file_attachment_groups:
             if not group[0].startswith('http'):
-                attachment_paths.append(group[0])
+                all_attachment_paths.append(group[0])
 
-    return attachment_paths
+    return all_attachment_paths
 
 
 def check_style(site_path: str) -> None:
