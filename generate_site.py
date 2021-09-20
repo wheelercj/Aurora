@@ -268,12 +268,14 @@ def fix_image_links(all_html_paths: List[str]) -> None:
 def create_html_files(new_zettel_paths: List[str]) -> List[str]:
     """Creates HTML files from markdown files into the site folder
     
-    Expects the zettels to already be in the site folder.
+    Expects the zettels to already be in the site folder. Returns all
+    the new HTML files' paths.
     """
-    new_html_files = []
+    new_html_file_paths = []
     for zettel_path in new_zettel_paths:
-        new_html_files.append(create_html_file(zettel_path))
-    return new_html_files
+        new_html_file_path = create_html_file(zettel_path)
+        new_html_file_paths.append(new_html_file_path)
+    return new_html_file_paths
 
 
 def create_html_file(zettel_path: str) -> str:
