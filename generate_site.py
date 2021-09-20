@@ -500,7 +500,8 @@ def create_zettel_index(zettels: List[Zettel]) -> str:
     Excludes zettels that have alpha characters in their file names.
     """
     numeric_links = []
-    for zettel in zettels:
+    sorted_zettels = sorted(zettels, key=lambda z: z.title.lower())
+    for zettel in sorted_zettels:
         if zettel.id.isnumeric():
             numeric_links.append('* ' + zettel.link)
     zettel_index = '\n\n---\n## index\n' + '\n'.join(numeric_links)
