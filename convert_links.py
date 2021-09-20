@@ -1,71 +1,90 @@
-# Converts zettel links from the zettelkasten style to markdown's style,
-# or vice versa. Currently, this only works with links that are 14-digit
-# zettel IDs, and with double square brackets for the zettelkasten-style
-# links. E.g. [[20201221140928]] gets changed to [§](20201221140928.md)
-# or vice-versa.
-
-
 # external imports
 import re
-from typing import List
+from typing import List, Tuple, Optional
 
 # internal imports
 from zettel import Zettel
 
 
-def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
-    print(f'Converting internal links from the zk to the md format.')
-    n = convert(r'\[\[(\d{14})\]\]', r'[[§]](\1.md)', zettels)
-    print(f'Converted {n} internal links from the zk to the md format.')
+def get_zettel_by_id(link_id, zettels: List[Zettel]) -> Zettel:
+    """Gets a zettel by its zettel ID."""
+    for zettel in zettels:
+        if zettel.id == link_id:
+            return zettel
 
 
-def convert_links_from_md_to_zk(zettels: List[Zettel]) -> None:
-    convert(r'\[\[§\]\]\((\d{14})\.md\)', r'[[\1]]', zettels)
-
-
-def convert(current_link_pattern: str,
-            new_link: str,
-            zettels: List[Zettel]) -> int:
-    """Converts file links in multiple zettels from a pattern to a string
+def get_contents(zettel: Zettel) -> Optional[str]:
+    """Gets the contents of a zettel
     
-    The new_link string can contain references to pattern groups in
-    current_link_pattern.
+    Returns None and prints an error message if attempting to open the 
+    zettel raised OSError.
     """
-    zettel_count = len(zettels)
+    try:
+        with open(zettel.path, 'r', encoding='utf8') as file:
+            contents = file.read()
+            return contents
+    except OSError:
+        print(f'  Zettel not found: `{zettel.title}` at {zettel.path}')
+        return None
+
+
+def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
+    """Converts links in multiple zettels from the zk to the md format
+    
+    Raises ValueError if a zettel link title is outdated.
+    """
+    print(f'Converting internal links from the zk to the md format.')
+    link_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
     total_char_count = 0
     total_n_replaced = 0
 
     for zettel in zettels:
-        try:
-            with open(zettel.path, 'r', encoding='utf8') as file:
-                contents = file.read()
-            char_count_1 = len(contents)
+        contents = get_contents(zettel)
+        if contents is None:
+            continue
 
-            # Use regex to find the links, and then convert them.
-            new_contents, n_replaced = re.subn(current_link_pattern,
-                                               new_link,
-                                               contents)
-            char_count_2 = len(new_contents)
+        char_count_1 = len(contents)
+        n_replaced, contents = convert_links(link_id_pattern,
+                                             contents,
+                                             zettel,
+                                             zettels)
+        char_count_2 = len(contents)
 
-            # Save contents back to the zettel.
-            if n_replaced > 0:
-                with open(zettel.path, 'w', encoding='utf8') as file:
-                    file.write(new_contents)
+        # Save contents back to the zettel.
+        if n_replaced:
+            with open(zettel.path, 'w', encoding='utf8') as file:
+                file.write(contents)
 
-            # Print character change stats.
-            char_count = char_count_2 - char_count_1
-            if n_replaced:
-                print(f'    Changed `{zettel.title}` by {char_count} ' \
-                    f'characters with {n_replaced} links converted.')
-            total_char_count += char_count
-            total_n_replaced += n_replaced
+        # Print character change stats.
+        char_count = char_count_2 - char_count_1
+        if n_replaced:
+            print(f'    Changed `{zettel.title}` by {char_count} ' \
+                f'characters with {n_replaced} links converted.')
+        total_char_count += char_count
+        total_n_replaced += n_replaced
 
-        except OSError:
-            print(f'Zettel not found: {zettel.path}')
+    print(f'  Changed {len(zettels)} zettels by a total of ' \
+        f'{total_char_count} characters with {total_n_replaced} links ' \
+        'converted from the zk to the md format.')
 
-    print(f'  Changed {zettel_count} zettels by a total of',
-        end='',
-        flush=True)
-    print(f' {total_char_count} characters with {total_n_replaced} links ' \
-        'converted.')
-    return total_n_replaced
+
+def convert_links(link_id_pattern: str,
+                  contents: str,
+                  zettel: Zettel,
+                  zettels: List[Zettel]) -> Tuple[int, str]:
+    """Converts links in one zettel from the zk to the md format
+    
+    Returns the number of links converted and the new contents with the 
+    converted links. Raises ValueError if a zettel link title is 
+    outdated.
+    """
+    link_ids: List[str] = link_id_pattern.findall(contents)
+    for link_id in set(link_ids):
+        linked_z = get_zettel_by_id(link_id, zettels)
+        if not contents.count(linked_z.link):
+            raise ValueError(f'`{zettel.title}` has an outdated link' \
+                f' title. It should be: {linked_z.link}')
+        contents = contents.replace(linked_z.link,
+                                f'[[§] {linked_z.title}]({linked_z.id}.md)')
+
+    return len(link_ids), contents
