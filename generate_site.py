@@ -112,7 +112,7 @@ def main(site_path: str,
 
 def syntax_highlight_code(html_paths: List[str]) -> None:
     """Adds syntax highlighting to code inside all HTML codeblocks."""
-    formatter = HtmlFormatter(linenos=True, cssclass='source')
+    formatter = HtmlFormatter(linenos=False, cssclass='source')
     cb_pattern = re.compile(r'<code[^<]+</code>')
     cb_lang_pattern = re.compile(r'(?<=<code class=").+(?=">)')
     cb_contents_pattern = re.compile(r'(?<=>)[^<]+(?=</code>)')
