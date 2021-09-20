@@ -5,7 +5,6 @@ import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
-import datetime
 from typing import List, Tuple, Any
 from functools import cache
 
@@ -388,12 +387,10 @@ def get_header_html(folder: str, site_title: str) -> str:
 @cache
 def get_footer_html(footer: str = '') -> str:
     """Retrieves the site's footer HTML from footer.html."""
-    time_now = str(datetime.datetime.now())
     with open('footer.html', 'r', encoding='utf8') as file:
         footer_html = file.read()
     footer_html = footer_html.replace('{footer}', footer)
-    footer_html = footer_html.replace('{time_now}', time_now)
-        # These strings are not supposed to be f-strings.
+        # The literal string is not supposed to be an f-string.
 
     return footer_html
 
