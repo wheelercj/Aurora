@@ -10,6 +10,7 @@ from typing import List, Tuple, Any
 from functools import cache
 
 # internal imports
+from zettel import Zettel
 from convert_links import convert_links_from_zk_to_md
 
 
@@ -50,29 +51,26 @@ def main(site_path: str,
     # site_posts_path = site_path + '/posts'
 
     print('Finding zettels that contain `#published`.')
-    zettel_paths = get_zettels_to_publish(zettelkasten_path)
-    print(f'Found {len(zettel_paths)} zettels that contain `#published`.')
-    check_links(zettel_paths)
+    zettels = get_zettels_to_publish(zettelkasten_path)
+    print(f'Found {len(zettels)} zettels that contain `#published`.')
+    check_links(zettels)
     
     print('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
 
     print(f'Copying the zettels to {site_posts_path}')
-    new_zettel_paths = copy_zettels_to_site_folder(zettel_paths,
-                                                   site_posts_path)
-    del zettel_paths  # to reduce the chance of accidentally changing 
-        # the zettelkasten.
+    zettels = copy_zettels_to_site_folder(zettels, site_posts_path)
 
     if append_index:
         print('Creating an index of all the published zettels in index.md')
-        append_zettel_index(new_zettel_paths)
+        append_zettel_index(zettels)
 
     print('Searching for any attachments that are linked to in the zettels.')
-    n = copy_attachments(new_zettel_paths, site_posts_path)
+    n = copy_attachments(zettels, site_posts_path)
     print(f'Found {n} attachments and copied them to {site_posts_path}')
 
-    reformat_zettels(new_zettel_paths, hide_tags)
-    new_html_paths = regenerate_html_files(new_zettel_paths, site_posts_path)
+    reformat_zettels(zettels, hide_tags)
+    new_html_paths = regenerate_html_files(zettels, site_posts_path)
 
     fix_image_links(new_html_paths)
     n = convert_attachment_links(new_html_paths)
@@ -183,18 +181,17 @@ def revert_html(codeblock: str) -> str:
     return codeblock
 
 
-def check_links(zettel_paths: List[str]) -> None:
+def check_links(zettels: List[Zettel]) -> None:
     """Raises ValueError if any zettel links are broken."""
-    valid_zettel_ids = get_zettel_ids(zettel_paths)
     zettel_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
-    for zettel_path in zettel_paths:
-        with open(zettel_path, 'r', encoding='utf8') as file:
+    for zettel in zettels:
+        with open(zettel.path, 'r', encoding='utf8') as file:
             contents = file.read()
         ids = zettel_id_pattern.findall(contents)
         for id in ids:
-            if id not in valid_zettel_ids:
+            if id not in (z.id for z in zettels):
                 raise ValueError(f'Zettel with ID {id} cannot be found' \
-                    f' but has been linked to in {zettel_path}')
+                    f' but has been linked to in {zettel.title}')
 
 
 def get_zettel_ids(zettel_paths: List[str]) -> List[str]:
@@ -207,19 +204,19 @@ def get_zettel_ids(zettel_paths: List[str]) -> List[str]:
     return zettel_ids
 
 
-def reformat_zettels(new_zettel_paths: List[str], hide_tags: bool) -> None:
+def reformat_zettels(zettels: List[Zettel], hide_tags: bool) -> None:
     """Convert any file links to absolute markdown-style HTML links
     
     Also, remove all tags from the files if hide_tags is True.
     """
-    make_file_paths_absolute(new_zettel_paths)
+    make_file_paths_absolute(zettels)
     if (hide_tags):
-        remove_all_tags(new_zettel_paths)
-    convert_links_from_zk_to_md(new_zettel_paths)
-    redirect_links_from_md_to_html(new_zettel_paths)
+        remove_all_tags(zettels)
+    convert_links_from_zk_to_md(zettels)
+    redirect_links_from_md_to_html(zettels)
 
 
-def regenerate_html_files(new_zettel_paths: List[str],
+def regenerate_html_files(zettels: List[Zettel],
                           site_posts_path: str) -> List[str]:
     """Creates new and deletes old HTML files
     
@@ -228,7 +225,7 @@ def regenerate_html_files(new_zettel_paths: List[str],
     """
     old_html_paths = get_file_paths(site_posts_path, '.html')
     print('Creating html files from the md files.')
-    new_html_paths = create_html_files(new_zettel_paths)
+    new_html_paths = create_html_files(zettels)
     all_html_paths = get_file_paths(site_posts_path, '.html')
 
     print('Deleting any HTML files that were not just generated and were not' \
@@ -265,29 +262,29 @@ def fix_image_links(all_html_paths: List[str]) -> None:
     print(f'Fixed the src path of {n} image links.')
 
 
-def create_html_files(new_zettel_paths: List[str]) -> List[str]:
+def create_html_files(zettels: List[Zettel]) -> List[str]:
     """Creates HTML files from markdown files into the site folder
     
     Expects the zettels to already be in the site folder. Returns all
     the new HTML files' paths.
     """
     new_html_file_paths = []
-    for zettel_path in new_zettel_paths:
-        new_html_file_path = create_html_file(zettel_path)
+    for zettel in zettels:
+        new_html_file_path = create_html_file(zettel)
         new_html_file_paths.append(new_html_file_path)
     return new_html_file_paths
 
 
-def create_html_file(zettel_path: str) -> str:
+def create_html_file(zettel: Zettel) -> str:
     """Creates one HTML file from a markdown file in the same folder
     
     Overwrites an HTML if it happens to have the same name. Returns the 
     new HTML file's path.
     """
-    with open(zettel_path, 'r', encoding='utf8') as file:
+    with open(zettel.path, 'r', encoding='utf8') as file:
         md_text = file.read()
     html_text = HTMLConverter(md_text)
-    html_path = create_html_path(zettel_path)
+    html_path = create_html_path(zettel.path)
     with open(html_path, 'w', encoding='utf8') as file:
         file.write(html_text)
     return html_path
@@ -300,24 +297,26 @@ def create_html_path(zettel_path: str) -> str:
     return new_html_path
 
 
-def redirect_links_from_md_to_html(new_zettel_paths: List[str]) -> None:
+def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
     """Changes links from pointing to markdown files to HTML files."""
     md_link_pattern = r'(?<=\S)\.md(?=\))'
-    n = replace_pattern(md_link_pattern, '.html', new_zettel_paths)
+    zettel_paths = [z.path for z in zettels]
+    n = replace_pattern(md_link_pattern, '.html', zettel_paths)
     print(f'Converted {n} internal links from ending with `.md` to ending ' \
         'with `.html`.')
 
 
-def make_file_paths_absolute(new_zettel_paths: List[str]) -> None:
+def make_file_paths_absolute(zettels: List[Zettel]) -> None:
     """Converts all relative file paths to absolute file paths."""
     attachment_link_pattern = r'(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))'
-    n = replace_pattern(attachment_link_pattern, r'\1', new_zettel_paths)
+    zettel_paths = [z.path for z in zettels]
+    n = replace_pattern(attachment_link_pattern, r'\1', zettel_paths)
     print(f'Converted {n} absolute file paths to relative file paths.')
 
 
-def copy_attachments(zettel_paths: List[str], site_posts_path: str) -> int:
+def copy_attachments(zettels: List[Zettel], site_posts_path: str) -> int:
     """Copies files linked to in the zettels into the site folder."""
-    attachment_paths = get_attachment_paths(zettel_paths)
+    attachment_paths = get_attachment_paths(zettels)
     for path in attachment_paths:
         try:
             shutil.copy(path, site_posts_path)
@@ -328,25 +327,26 @@ def copy_attachments(zettel_paths: List[str], site_posts_path: str) -> int:
     return len(attachment_paths)
 
 
-def copy_zettels_to_site_folder(zettel_paths: List[str],
-                                site_posts_path: str) -> List[str]:
+def copy_zettels_to_site_folder(zettels: List[Zettel],
+                                site_posts_path: str) -> List[Zettel]:
     """Copies zettels to the site folder
     
-    Returns the new zettels' paths.
+    Returns the zettels with their new paths.
     """
-    new_zettel_paths = []
-    for zettel_path in zettel_paths:
-        new_zettel_paths.append(shutil.copy(zettel_path, site_posts_path))
-    return new_zettel_paths
+    for i, zettel in enumerate(zettels):
+        new_path = shutil.copy(zettel.path, site_posts_path)
+        zettels[i].path = new_path
+    return zettels
 
 
-def remove_all_tags(new_zettel_paths: List[str]) -> None:
+def remove_all_tags(zettels: List[Zettel]) -> None:
     """Removes all tags from the zettels
     
     Prints a message saying how many tags were removed.
     """
     tag_pattern = r'(?<=\s)#[a-zA-Z0-9_-]+'
-    n = replace_pattern(tag_pattern, '', new_zettel_paths)
+    zettel_paths = [z.path for z in zettels]
+    n = replace_pattern(tag_pattern, '', zettel_paths)
     print(f'Removed {n} tags.')
 
 
@@ -453,16 +453,25 @@ def replace_pattern(uncompiled_pattern: str,
     return total_replaced
 
 
-def get_zettels_to_publish(dir_path: str) -> List[str]:
-    """Finds all the zettels that contain '#published'."""
+def get_zettels_to_publish(dir_path: str) -> List[Zettel]:
+    """Gets all the zettels that contain '#published'."""
+    zettel_paths = get_paths_of_zettels_to_publish(dir_path)
+    zettels = []
+    for path in zettel_paths:
+        zettels.append(Zettel(path))
+    return zettels
+
+
+def get_paths_of_zettels_to_publish(dir_path: str) -> List[str]:
+    """Gets the paths of all zettels that contain '#published'."""
     zettel_paths = get_file_paths(dir_path, '.md')
     zettels_to_publish = []
     published_tag_pattern = re.compile(r'(?<=\s)#published(?=\s)')
 
     for zettel_path in zettel_paths:
-        with open(zettel_path, 'r', encoding='utf8') as zettel:
+        with open(zettel_path, 'r', encoding='utf8') as file:
             try:
-                contents = zettel.read()
+                contents = file.read()
             except UnicodeDecodeError:
                 print(f'UnicodeDecodeError in file {zettel_path}')
                 raise
@@ -474,10 +483,10 @@ def get_zettels_to_publish(dir_path: str) -> List[str]:
     return zettels_to_publish
 
 
-def append_zettel_index(zettel_paths: List[str]) -> None:
+def append_zettel_index(zettels: List[Zettel]) -> None:
     """Lists all the zettels at the end of index.md."""
     index_file_name = 'index.md'
-    new_index = create_zettel_index(zettel_paths)
+    new_index = create_zettel_index(zettels)
     with open(index_file_name, 'r', encoding='utf8') as file:
         contents = file.read()
     index_pattern = re.compile(r'(?<=\n)## index\n(\*\s\[\[\d{14}\]\]\s.+\n*)+')
@@ -488,36 +497,17 @@ def append_zettel_index(zettel_paths: List[str]) -> None:
         file.write(new_contents)
 
 
-def create_zettel_index(zettel_paths: List[str]) -> str:
+def create_zettel_index(zettels: List[Zettel]) -> str:
     """Creates a markdown list of all zettels' titles and links
     
     Excludes zettels that have alpha characters in their file names.
     """
-    zettel_links = get_zettel_links(zettel_paths)
-    zettel_index = '\n\n---\n## index\n' + '\n'.join(zettel_links)
+    numeric_links = []
+    for zettel in zettels:
+        if zettel.id.isnumeric():
+            numeric_links.append('* ' + zettel.link)
+    zettel_index = '\n\n---\n## index\n' + '\n'.join(numeric_links)
     return zettel_index
-
-
-def get_zettel_links(zettel_paths: List[str]) -> List[str]:
-    """Gets the links to all zettels with numeric file names
-    
-    The zettels are sorted alphabetically by title.
-    """
-    zettel_ids_and_titles: List[List[str, str]] = []
-    for zettel_path in zettel_paths:
-        _, file_name = os.path.split(zettel_path)
-        zettel_id, _ = os.path.splitext(file_name)
-        if zettel_id.isnumeric():
-            zettel_title = get_zettel_title(zettel_path)
-            zettel_ids_and_titles.append([zettel_id, zettel_title])
-
-    zettel_links = []
-    sorted_ids_and_titles = sorted(zettel_ids_and_titles,
-                                   key=lambda x: x[1].lower())
-    for z in sorted_ids_and_titles:
-        zettel_links.append(f'* [[{z[0]}]] {z[1]}')
-
-    return zettel_links
 
 
 def get_zettel_title(zettel_path: str) -> str:
@@ -554,15 +544,15 @@ def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
     return file_paths
 
 
-def get_attachment_paths(zettel_paths: List[str]) -> List[str]:
+def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
     """Gets the file attachment links in multiple zettels."""
     all_attachment_paths = []
     file_attachment_groups: List[Tuple[str]] = []
 
     attachment_pattern = re.compile(r'(?<=]\()(.+\S\.(pdf|png))(?=\))')
-    for zettel_path in zettel_paths:
-        with open(zettel_path, 'r', encoding='utf8') as zettel:
-            contents = zettel.read()
+    for zettel in zettels:
+        with open(zettel.path, 'r', encoding='utf8') as file:
+            contents = file.read()
         file_attachment_groups: List[Tuple[str]] = \
             attachment_pattern.findall(contents)
         for group in file_attachment_groups:
