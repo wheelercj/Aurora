@@ -211,11 +211,10 @@ def revert_html(codeblock: str) -> str:
 
 def check_links(zettels: List[Zettel]) -> None:
     """Raises ValueError if any zettel links are broken."""
-    zettel_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
     for zettel in zettels:
         with open(zettel.path, 'r', encoding='utf8') as file:
             contents = file.read()
-        ids = zettel_id_pattern.findall(contents)
+        ids = patterns.zettel_link_id.findall(contents)
         for id in ids:
             if id not in (z.id for z in zettels):
                 raise ValueError(f'Zettel with ID {id} cannot be found' \
@@ -434,8 +433,6 @@ def replace_pattern(uncompiled_pattern: str,
     """
     total_replaced = 0
     chosen_pattern = re.compile(uncompiled_pattern)
-    triple_code_block_pattern = re.compile(r'(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})')
-    single_code_block_pattern = re.compile(r'(`[^`]+?`)')
     
     for file_path in file_paths:
         with open(file_path, 'r', encoding=encoding) as file:
@@ -447,27 +444,27 @@ def replace_pattern(uncompiled_pattern: str,
 
         # Temporarily remove any code blocks from contents.
         # TODO: use mistune's ast instead?
-        triple_code_blocks = triple_code_block_pattern.findall(contents)
-        if len(triple_code_blocks):
-            contents = triple_code_block_pattern.sub('␝', contents)
+        triple_codeblocks = patterns.triple_codeblock.findall(contents)
+        if len(triple_codeblocks):
+            contents = patterns.triple_codeblock.sub('␝', contents)
 
-        single_code_blocks = single_code_block_pattern.findall(contents)
-        if len(single_code_blocks):
-            contents = single_code_block_pattern.sub('␞', contents)
+        single_codeblocks = patterns.single_codeblock.findall(contents)
+        if len(single_codeblocks):
+            contents = patterns.single_codeblock.sub('␞', contents)
 
         # Replace the pattern.
         new_contents, n_replaced = chosen_pattern.subn(replacement, contents)
         total_replaced += n_replaced
 
         # Put back the code blocks.
-        for single_code_block in single_code_blocks:
+        for single_codeblock in single_codeblocks:
             new_contents = re.sub(r'␞',
-                                  single_code_block.replace('\\', r'\\'),
+                                  single_codeblock.replace('\\', r'\\'),
                                   new_contents,
                                   count=1)
-        for triple_code_block in triple_code_blocks:
+        for triple_codeblock in triple_codeblocks:
             new_contents = re.sub(r'␝',
-                                  triple_code_block[0].replace('\\', r'\\'),
+                                  triple_codeblock[0].replace('\\', r'\\'),
                                   new_contents,
                                   count=1)
         
@@ -605,7 +602,7 @@ def get_zettel_title(zettel_path: str) -> str:
     """Gets a zettel's title (its first header level 1)."""
     with open(zettel_path, 'r', encoding='utf8') as file:
         contents = file.read()
-    match = re.search(r'(?<=#\s).+', contents)
+    match = patterns.tags.search(contents)
     if match:
         return match[0]
     raise ValueError('Each zettel needs a title.')
