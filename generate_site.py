@@ -18,7 +18,7 @@ from convert_links import convert_links_from_zk_to_md
 def generate_site():
     """Generates all the site's files."""
     zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-    site_path = 'C:/Users/chris/Documents/blog'
+    site_path = 'C:/Users/chris/Documents/site'
     site_title = "Chris' notes"
     copyright_text = '© 2021 Chris Wheeler'
     hide_tags = True   # If true, tags will be removed from the copied 

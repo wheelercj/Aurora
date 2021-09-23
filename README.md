@@ -14,7 +14,7 @@ This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.
 5. In `generate_site.py`, near the top of the file are some variables you will want to customize. Their defaults are what I use for my site:
 ```python
 zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-site_path = 'C:/Users/chris/Documents/blog'
+site_path = 'C:/Users/chris/Documents/site'
 site_title = "Chris' notes"
 copyright_text = '© 2021 Chris Wheeler'
 hide_tags = True   # If true, tags will be removed from the copied 
