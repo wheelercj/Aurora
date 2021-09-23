@@ -1,31 +1,10 @@
 # external imports
 import re
 from typing import List, Tuple, Optional
+import logging
 
 # internal imports
 from zettel import Zettel
-
-
-def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
-    """Gets a zettel by its zettel ID."""
-    for zettel in zettels:
-        if zettel.id == link_id:
-            return zettel
-
-
-def get_contents(zettel: Zettel) -> Optional[str]:
-    """Gets the contents of a zettel
-    
-    Returns None and prints an error message if attempting to open the 
-    zettel raised OSError.
-    """
-    try:
-        with open(zettel.path, 'r', encoding='utf8') as file:
-            contents = file.read()
-            return contents
-    except OSError:
-        print(f'  Zettel not found: `{zettel.title}` at {zettel.path}')
-        return None
 
 
 def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
@@ -33,7 +12,7 @@ def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
     
     Raises ValueError if a zettel link title is outdated.
     """
-    print(f'Converting internal links from the zk to the md format.')
+    logging.info(f'Converting internal links from the zk to the md format.')
     link_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
     total_char_count = 0
     total_n_replaced = 0
@@ -55,17 +34,40 @@ def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
             with open(zettel.path, 'w', encoding='utf8') as file:
                 file.write(contents)
 
-        # Print character change stats.
+        # Log character change stats.
         char_count = char_count_2 - char_count_1
         if n_replaced:
-            print(f'    Changed `{zettel.title}` by {char_count} ' \
+            logging.info(f'    Changed `{zettel.title}` by {char_count} ' \
                 f'characters with {n_replaced} links converted.')
         total_char_count += char_count
         total_n_replaced += n_replaced
 
-    print(f'  Changed {len(zettels)} zettels by a total of ' \
+    logging.info(f'  Changed {len(zettels)} zettels by a total of ' \
         f'{total_char_count} characters with {total_n_replaced} links ' \
         'converted from the zk to the md format.')
+
+
+def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
+    """Gets a zettel by its zettel ID."""
+    for zettel in zettels:
+        if zettel.id == link_id:
+            return zettel
+
+
+def get_contents(zettel: Zettel) -> Optional[str]:
+    """Gets the contents of a zettel
+    
+    Returns None and prints an error message if attempting to open the 
+    zettel raised OSError.
+    """
+    try:
+        with open(zettel.path, 'r', encoding='utf8') as file:
+            contents = file.read()
+            return contents
+    except OSError:
+        logging.warning(f'  Zettel not found: `{zettel.title}` at ' \
+            f'{zettel.path}')
+        return None
 
 
 def convert_links(link_id_pattern: str,

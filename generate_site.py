@@ -1,6 +1,5 @@
 # external imports
 import os
-import sys
 import re
 import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
@@ -8,6 +7,8 @@ from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 from typing import List, Tuple, Dict, Any
 from functools import cache
+import logging
+logging.basicConfig(level=logging.WARNING)  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
 from zettel import Zettel
@@ -51,32 +52,32 @@ def generate_site(site_path: str,
     # a different location.
     # site_posts_path = site_path + '/posts'
 
-    print('Finding zettels that contain `#published`.')
+    logging.info('Finding zettels that contain `#published`.')
     zettels = get_zettels_to_publish(zettelkasten_path)
-    print(f'Found {len(zettels)} zettels that contain `#published`.')
+    logging.info(f'Found {len(zettels)} zettels that contain `#published`.')
     check_links(zettels)
     
-    print('Deleting all markdown files currently in the site folder.')
+    logging.info('Deleting all markdown files currently in the site folder.')
     delete_site_md_files(site_posts_path)
 
-    print(f'Copying the zettels to {site_posts_path}')
+    logging.info(f'Copying the zettels to {site_posts_path}')
     zettels = copy_zettels_to_site_folder(zettels, site_posts_path)
 
-    print('Creating index files of all published zettels.')
+    logging.info('Creating index files of all published zettels.')
     create_index_files(zettels, hide_chrono_index_dates)
 
-    print('Searching for any attachments that are linked to in the zettels.')
+    logging.info('Searching for any attachments that are linked to in the zettels.')
     n = copy_attachments(zettels, site_posts_path)
-    print(f'Found {n} attachments and copied them to {site_posts_path}')
+    logging.info(f'Found {n} attachments and copied them to {site_posts_path}')
 
     reformat_zettels(zettels, hide_tags)
     new_html_paths = regenerate_html_files(zettels, site_posts_path)
 
     fix_image_links(new_html_paths)
     n = convert_attachment_links(new_html_paths)
-    print(f'Converted {n} attachment links from the md to the html format.')
+    logging.info(f'Converted {n} attachment links from the md to the html format.')
 
-    print('Adding syntax highlighting to code in codeblocks.')
+    logging.info('Adding syntax highlighting to code in codeblocks.')
     syntax_highlight_code(new_html_paths)
 
     # TODO: create a posts folder. Only index.html and about.html should
@@ -91,24 +92,23 @@ def generate_site(site_path: str,
     #             os.rename(path, new_html_path)
     #             root_html_paths += new_html_path
     #             all_html_paths.remove(path)
-    #             print(f'Moved {file_name} to the root folder.')
+    #             logging.info(f'Moved {file_name} to the root folder.')
 
-    print('Inserting the site header, footer, etc. into each html file.')
+    logging.info('Inserting the site header, footer, etc. into each html file.')
     append_index_links()
     append_html('index.html',
         '<br><br><br><br><br><br><br><p style="text-align: ' \
         f'center">{copyright_text}</p>')
     wrap_template_html(new_html_paths, site_title)
 
-    print('Checking for style.css.')
+    logging.info('Checking for style.css.')
     check_style(site_path)
 
-    print('\nGenerated HTML files:')
+    logging.info('\nGenerated HTML files:')
     for path in new_html_paths:
-        print(f'  {path}')
+        logging.info(f'  {path}')
 
-    print(f'{len(new_html_paths)} HTML files generated.')
-    print('\nWebsite generation complete.\n')
+    print(f'Successfully generated {len(new_html_paths)} HTML files.')
 
 
 def append_index_links() -> None:
@@ -252,12 +252,12 @@ def regenerate_html_files(zettels: List[Zettel],
     ssg-ignore.txt are saved and not changed at all.
     """
     old_html_paths = get_file_paths(site_posts_path, '.html')
-    print('Creating html files from the md files.')
+    logging.info('Creating html files from the md files.')
     new_html_paths = create_html_files(zettels)
     all_html_paths = get_file_paths(site_posts_path, '.html')
 
-    print('Deleting any HTML files that were not just generated and were not' \
-        ' listed in ssg-ignore.txt.')
+    logging.info('Deleting any HTML files that were not just generated and ' \
+        'were not listed in ssg-ignore.txt.')
     delete_old_html_files(old_html_paths, all_html_paths, site_posts_path)
 
     return new_html_paths
@@ -287,7 +287,7 @@ def fix_image_links(all_html_paths: List[str]) -> None:
     n = replace_pattern(incorrect_link_pattern,
                         '.png" src="images/',
                         all_html_paths)
-    print(f'Fixed the src path of {n} image links.')
+    logging.info(f'Fixed the src path of {n} image links.')
 
 
 def create_html_files(zettels: List[Zettel]) -> List[str]:
@@ -330,8 +330,8 @@ def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
     md_link_pattern = r'(?<=\S)\.md(?=\))'
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(md_link_pattern, '.html', zettel_paths)
-    print(f'Converted {n} internal links from ending with `.md` to ending ' \
-        'with `.html`.')
+    logging.info(f'Converted {n} internal links from ending with `.md` to ' \
+        'ending with `.html`.')
 
 
 def make_file_paths_absolute(zettels: List[Zettel]) -> None:
@@ -339,7 +339,7 @@ def make_file_paths_absolute(zettels: List[Zettel]) -> None:
     attachment_link_pattern = r'(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))'
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(attachment_link_pattern, r'\1', zettel_paths)
-    print(f'Converted {n} absolute file paths to relative file paths.')
+    logging.info(f'Converted {n} absolute file paths to relative file paths.')
 
 
 def copy_attachments(zettels: List[Zettel], site_posts_path: str) -> int:
@@ -350,7 +350,8 @@ def copy_attachments(zettels: List[Zettel], site_posts_path: str) -> int:
             shutil.copy(path, site_posts_path)
         except shutil.SameFileError:
             _, file_name = os.path.split(path)
-            print(f'  Did not copy {file_name} because it is already there.')
+            logging.info(f'  Did not copy {file_name} because it is already ' \
+                'there.')
 
     return len(attachment_paths)
 
@@ -370,12 +371,12 @@ def copy_zettels_to_site_folder(zettels: List[Zettel],
 def remove_all_tags(zettels: List[Zettel]) -> None:
     """Removes all tags from the zettels
     
-    Prints a message saying how many tags were removed.
+    Logs a message saying how many tags were removed.
     """
     tag_pattern = r'(?<=\s)#[a-zA-Z0-9_-]+'
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(tag_pattern, '', zettel_paths)
-    print(f'Removed {n} tags.')
+    logging.info(f'Removed {n} tags.')
 
 
 def append_html(file_name: str, html: str) -> None:
@@ -440,7 +441,7 @@ def replace_pattern(uncompiled_pattern: str,
             try:
                 contents = file.read()
             except UnicodeDecodeError as e:
-                print(f'UnicodeDecodeError: {e}')
+                logging.error(f'UnicodeDecodeError: {e}')
                 raise e
 
         # Temporarily remove any code blocks from contents.
@@ -497,7 +498,7 @@ def get_paths_of_zettels_to_publish(dir_path: str) -> List[str]:
             try:
                 contents = file.read()
             except UnicodeDecodeError:
-                print(f'UnicodeDecodeError in file {zettel_path}')
+                logging.error(f'UnicodeDecodeError in file {zettel_path}')
                 raise
 
         match = published_tag_pattern.search(contents)
@@ -569,8 +570,8 @@ def create_categorical_indexes(zettels: List[Zettel],
     for zettel in zettels:
         if zettel not in linked_zettels \
                 and zettel.title not in ('index', 'about'):
-            print('  Warning: zettel not listed in index.md: ' \
-                f'`{zettel.title}`', file=sys.stderr)
+            logging.warning(' zettel not listed in index.md: ' \
+                f'`{zettel.title}`')
 
     return categories
 
@@ -657,9 +658,10 @@ def check_style(site_path: str) -> None:
     """
     site_style_path = os.path.join(site_path, 'style.css')
     if os.path.isfile(site_style_path):
-        print('  style.css already exists. The file will not be changed.')
+        logging.info('  style.css already exists. The file will not be ' \
+            'changed.')
     else:
-        print('  style.css was not found. Providing a new copy.')
+        logging.info('  style.css was not found. Providing a new copy.')
         this_dir, _ = os.path.split(__file__)
         this_style_path = os.path.join(this_dir, 'style.css')
         shutil.copy(this_style_path, site_path)
@@ -680,7 +682,7 @@ def delete_old_html_files(old_html_paths: List[str],
         with open(file_name, 'r', encoding='utf8') as file:
             ignored_html_paths = file.read().split('\n')
     except FileNotFoundError:
-        print('  ssg-ignore.txt not found')
+        logging.info('  ssg-ignore.txt not found')
         ignored_html_paths = []
 
     # Make sure all the slashes in all the paths are the same.
@@ -700,7 +702,7 @@ def delete_old_html_files(old_html_paths: List[str],
                 else:
                     print('    File saved.')
     if not old_count:
-        print('  No old HTML files found.')
+        print('No old HTML files found.')
     else:
         print(f'  Deleted {old_count} files.')
 
