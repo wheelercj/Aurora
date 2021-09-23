@@ -1,15 +1,17 @@
 # external imports
 import os
+import sys
 import re
 import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
-from typing import List, Tuple, Any
+from typing import List, Tuple, Dict, Any
 from functools import cache
 
 # internal imports
 from zettel import Zettel
+from patterns import patterns
 from convert_links import convert_links_from_zk_to_md
 
 
@@ -127,6 +129,7 @@ def create_index_files(zettels: List[Zettel]) -> None:
     The files created are alphabetical-index.md and 
     chronological-index.md.
     """
+    create_categorical_index_file(zettels)
     create_alphabetical_index_file(zettels)
     create_chronological_index_file(zettels)
     alpha_index_path = os.path.abspath('alphabetical-index.md')
@@ -506,6 +509,29 @@ def get_paths_of_zettels_to_publish(dir_path: str) -> List[str]:
     return zettels_to_publish
 
 
+def create_categorical_index_file(zettels: List[Zettel]) -> None:
+    """Lists all the zettels categorically in index.md
+    
+    index.md must already exist and contain the `#published` tag and the
+    other tags that will be replaced by the zettel links to the zettels
+    that contain those tags.
+    """
+    with open('index.md', 'r', encoding='utf8') as file:
+        index_contents = file.read()
+    index_tags: List[str] = patterns.tags.findall(index_contents)
+    if '#published' not in index_tags:
+        raise ValueError('index.md must be publishable.')
+    index_tags.remove('#published')
+    
+    categories: Dict[str, str] = create_categorical_indexes(zettels,
+                                                            index_tags)
+    for tag, links in categories.items():
+        index_contents = index_contents.replace(tag, links, 1)
+
+    with open('index.md', 'w', encoding='utf8') as file:
+        file.write(index_contents)
+
+
 def create_alphabetical_index_file(zettels: List[Zettel]) -> None:
     """Lists all the zettels alphabetically in a new markdown file."""
     index = create_alphabetical_index(zettels)
@@ -520,10 +546,36 @@ def create_chronological_index_file(zettels: List[Zettel]) -> None:
         file.write(index)
 
 
+def create_categorical_indexes(zettels: List[Zettel],
+                             index_tags: List[str]) -> Dict[str, str]:
+    """Creates categorical markdown lists of all zettels' links
+    
+    The returned dict's keys are tags and its values are the link lists.
+    Excludes zettels that have alpha characters in their IDs.
+    """
+    categories = dict()
+    linked_zettels: List[Zettel] = []
+    for index_tag in index_tags:
+        categories[index_tag] = ''
+        for zettel in zettels:
+            if zettel.id.isnumeric():
+                if index_tag in zettel.tags:
+                    categories[index_tag] += '* ' + zettel.link + '\n'
+                    linked_zettels.append(zettel)
+
+    for zettel in zettels:
+        if zettel not in linked_zettels \
+                and zettel.title not in ('index', 'about'):
+            print('  Warning: zettel not listed in index.md: ' \
+                f'`{zettel.title}`', file=sys.stderr)
+
+    return categories
+
+
 def create_alphabetical_index(zettels: List[Zettel]) -> str:
     """Creates an alphabetized markdown list of all zettels' links
     
-    Excludes zettels that have alpha characters in their file names.
+    Excludes zettels that have alpha characters in their IDs.
     """
     numeric_links = []
     sorted_zettels = sorted(zettels, key=lambda z: z.title.lower())
@@ -537,7 +589,7 @@ def create_alphabetical_index(zettels: List[Zettel]) -> str:
 def create_chronological_index(zettels: List[Zettel]) -> str:
     """Creates a chronologized markdown list of all zettels' links
     
-    Excludes zettels that have alpha characters in their file names.
+    Excludes zettels that have alpha characters in their IDs.
     """
     numeric_links = []
     sorted_zettels = sorted(zettels, key=lambda z: z.id, reverse=True)

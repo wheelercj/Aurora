@@ -1,14 +1,19 @@
+# external imports
 import os
-import re
+from typing import List
+
+# internal imports
+from patterns import patterns
 
 
 class Zettel:
     def __init__(self, zettel_path: str):
         self.path: str = zettel_path
-        self.file_name: str = self.get_zettel_file_name()
+        self.file_name: str = self.get_zettel_file_name()  # includes extension
         self.id: str = self.get_zettel_id()
         self.title: str = self.get_zettel_title()
         self.link: str = self.get_zettel_link()
+        self.tags: List[str] = self.get_zettel_tags()
 
 
     def get_zettel_file_name(self) -> str:
@@ -24,23 +29,31 @@ class Zettel:
 
 
     def get_zettel_title(self) -> str:
-        """Gets a zettel's title (its first header level 1)."""
-        if self.path.endswith('index.md'):
+        """Gets the zettel's title (its first header level 1)."""
+        if self.file_name == 'index.md':
             return 'index'
-        elif self.path.endswith('about.md'):
+        elif self.file_name == 'about.md':
             return 'about'
 
         with open(self.path, 'r', encoding='utf8') as file:
             contents = file.read()
-        match = re.search(r'(?<=#\s).+', contents)
+        match = patterns.h1_content.search(contents)
         if match:
             return match[0]
         raise ValueError(f'Zettel missing a title: {self.file_name}')
 
 
     def get_zettel_link(self) -> str:
-        """Gets a zettel's zettelkasten-style link
+        """Gets the zettel's zettelkasten-style link
         
         E.g. `[[20210919100142]] zettel title here`.
         """
         return f'[[{self.id}]] {self.title}'
+
+    
+    def get_zettel_tags(self) -> List[str]:
+        """Gets all the tags in the zettel."""
+        with open(self.path, 'r', encoding='utf8') as file:
+            contents = file.read()
+        tags: List[str] = patterns.tags.findall(contents)
+        return tags
