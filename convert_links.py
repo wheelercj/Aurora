@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional
 from zettel import Zettel
 
 
-def get_zettel_by_id(link_id, zettels: List[Zettel]) -> Zettel:
+def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
     """Gets a zettel by its zettel ID."""
     for zettel in zettels:
         if zettel.id == link_id:
