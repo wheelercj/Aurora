@@ -540,7 +540,7 @@ def create_chronological_index(zettels: List[Zettel]) -> str:
     Excludes zettels that have alpha characters in their file names.
     """
     numeric_links = []
-    sorted_zettels = sorted(zettels, key=lambda z: z.id)
+    sorted_zettels = sorted(zettels, key=lambda z: z.id, reverse=True)
     for zettel in sorted_zettels:
         if zettel.id.isnumeric():
             date = zettel.id[0:4] + '/' + zettel.id[4:6] + '/' + zettel.id[6:8]
