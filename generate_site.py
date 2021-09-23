@@ -15,7 +15,7 @@ from patterns import patterns
 from convert_links import convert_links_from_zk_to_md
 
 
-def generate_site():
+def main():
     """Generates all the site's files."""
     zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
     site_path = 'C:/Users/chris/Documents/site'
@@ -26,7 +26,7 @@ def generate_site():
     hide_chrono_index_dates = True  # If true, file creation dates will
         # not be shown in the chronological index.
 
-    main(site_path,
+    generate_site(site_path,
         zettelkasten_path,
         site_title,
         copyright_text,
@@ -34,7 +34,7 @@ def generate_site():
         hide_chrono_index_dates)
 
 
-def main(site_path: str,
+def generate_site(site_path: str,
          zettelkasten_path: str,
          site_title: str,
          copyright_text: str,
@@ -706,4 +706,4 @@ def delete_old_html_files(old_html_paths: List[str],
 
 
 if __name__ == '__main__':
-    generate_site()
+    main()
