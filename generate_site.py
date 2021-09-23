@@ -21,23 +21,19 @@ def generate_site():
     copyright_text = '© 2021 Chris Wheeler'
     hide_tags = True   # If true, tags will be removed from the copied 
             # zettels when generating the site.
-    append_index = True  # If true, a list of all zettels will be
-            # displayed at the end of index.md.
 
     main(site_path,
         zettelkasten_path,
         site_title,
         copyright_text,
-        hide_tags,
-        append_index)
+        hide_tags)
 
 
 def main(site_path: str,
          zettelkasten_path: str,
          site_title: str,
          copyright_text: str,
-         hide_tags: bool,
-         append_index: bool):
+         hide_tags: bool):
     """Generates all the site's files."""
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
@@ -60,9 +56,8 @@ def main(site_path: str,
     print(f'Copying the zettels to {site_posts_path}')
     zettels = copy_zettels_to_site_folder(zettels, site_posts_path)
 
-    if append_index:
-        print('Creating an index of all the published zettels in index.md')
-        append_zettel_index(zettels)
+    print('Creating index files of all published zettels.')
+    create_index_files(zettels)
 
     print('Searching for any attachments that are linked to in the zettels.')
     n = copy_attachments(zettels, site_posts_path)
@@ -93,6 +88,7 @@ def main(site_path: str,
     #             print(f'Moved {file_name} to the root folder.')
 
     print('Inserting the site header, footer, etc. into each html file.')
+    append_index_links()
     append_html('index.html',
         '<br><br><br><br><br><br><br><p style="text-align: ' \
         f'center">{copyright_text}</p>')
@@ -107,6 +103,36 @@ def main(site_path: str,
 
     print(f'{len(new_html_paths)} HTML files generated.')
     print('\nWebsite generation complete.\n')
+
+
+def append_index_links() -> None:
+    """Appends links to the other index pages in each HTML index file."""
+    append_html('index.html',
+        '<hr /><p>sort by: ' \
+        '<a href="alphabetical-index.html">α</a> | ' \
+        '<a href="chronological-index.html">🕑</a></p>')
+    append_html('alphabetical-index.html',
+        '<hr /><p>sort by: ' \
+        '<a href="index.html">💡</a> | ' \
+        '<a href="chronological-index.html">🕑</a></p>')
+    append_html('chronological-index.html',
+        '<hr /><p>sort by: ' \
+        '<a href="alphabetical-index.html">α</a> | ' \
+        '<a href="index.html">💡</a>')
+
+
+def create_index_files(zettels: List[Zettel]) -> None:
+    """Creates markdown files that list all the published zettels
+    
+    The files created are alphabetical-index.md and 
+    chronological-index.md.
+    """
+    create_alphabetical_index_file(zettels)
+    create_chronological_index_file(zettels)
+    alpha_index_path = os.path.abspath('alphabetical-index.md')
+    chrono_index_path = os.path.abspath('chronological-index.md')
+    zettels.append(Zettel(alpha_index_path))
+    zettels.append(Zettel(chrono_index_path))
 
 
 def syntax_highlight_code(html_paths: List[str]) -> None:
@@ -480,22 +506,22 @@ def get_paths_of_zettels_to_publish(dir_path: str) -> List[str]:
     return zettels_to_publish
 
 
-def append_zettel_index(zettels: List[Zettel]) -> None:
-    """Lists all the zettels at the end of index.md."""
-    index_file_name = 'index.md'
-    new_index = create_zettel_index(zettels)
-    with open(index_file_name, 'r', encoding='utf8') as file:
-        contents = file.read()
-    index_pattern = re.compile(r'(?<=\n)## index\n(\*\s\[\[\d{14}\]\]\s.+\n*)+')
-    new_contents, n = index_pattern.subn(new_index, contents, 1)
-    if not n:
-        new_contents = contents + '\n\n' + new_index
-    with open(index_file_name, 'w', encoding='utf8') as file:
-        file.write(new_contents)
+def create_alphabetical_index_file(zettels: List[Zettel]) -> None:
+    """Lists all the zettels alphabetically in a new markdown file."""
+    index = create_alphabetical_index(zettels)
+    with open('alphabetical-index.md', 'w', encoding='utf8') as file:
+        file.write(index)
 
 
-def create_zettel_index(zettels: List[Zettel]) -> str:
-    """Creates a markdown list of all zettels' titles and links
+def create_chronological_index_file(zettels: List[Zettel]) -> None:
+    """Lists all the zettels chronologically in a new markdown file."""
+    index = create_chronological_index(zettels)
+    with open('chronological-index.md', 'w', encoding='utf8') as file:
+        file.write(index)
+
+
+def create_alphabetical_index(zettels: List[Zettel]) -> str:
+    """Creates an alphabetized markdown list of all zettels' links
     
     Excludes zettels that have alpha characters in their file names.
     """
@@ -504,7 +530,22 @@ def create_zettel_index(zettels: List[Zettel]) -> str:
     for zettel in sorted_zettels:
         if zettel.id.isnumeric():
             numeric_links.append('* ' + zettel.link)
-    zettel_index = '\n\n---\n## index\n' + '\n'.join(numeric_links)
+    zettel_index = '## alphabetical index\n\n' + '\n'.join(numeric_links)
+    return zettel_index
+
+
+def create_chronological_index(zettels: List[Zettel]) -> str:
+    """Creates a chronologized markdown list of all zettels' links
+    
+    Excludes zettels that have alpha characters in their file names.
+    """
+    numeric_links = []
+    sorted_zettels = sorted(zettels, key=lambda z: z.id)
+    for zettel in sorted_zettels:
+        if zettel.id.isnumeric():
+            date = zettel.id[0:4] + '/' + zettel.id[4:6] + '/' + zettel.id[6:8]
+            numeric_links.append('* ' + date + ' ' + zettel.link)
+    zettel_index = '## chronological index\n\n' + '\n'.join(numeric_links)
     return zettel_index
 
 

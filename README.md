@@ -10,7 +10,8 @@ This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.
 * The user must know how to run Python code (not necessarily how to code in Python).
 * Each of the zettels that are to be published contain the tag `#published`.
 * All the zettels that are to be published are in the same folder (the "zettelkasten folder").
-* There are zettels named `index.md` and `about.md` that contain `#published` in the zettelkasten folder.
+* There are zettels named `index.md` and `about.md` (that contain `#published`) in the zettelkasten folder.
+* There are not files named `alphabetical-index.md` and/or `chronological-index.md` (that contain `#published`) in the zettelkasten folder.
 * The name of each zettel file (except index.md and about.md) is the zettel's 14-digit ID followed by `.md`, e.g. `20201221140928.md`.
 * The zettelkasten-style internal links are delimited by double square brackets and are composed of a numerical 14-digit zettel ID, e.g. `[[20201221140928]] note title usually goes here`.
 * Almost all of the website's files will end up in the same folder (the site folder) when the site is generated, and many of the files that were already there will be overwritten or deleted (details below).
