@@ -22,20 +22,24 @@ def generate_site():
     site_title = "Chris' notes"
     copyright_text = '© 2021 Chris Wheeler'
     hide_tags = True   # If true, tags will be removed from the copied 
-            # zettels when generating the site.
+        # zettels when generating the site.
+    hide_chrono_index_dates = True  # If true, file creation dates will
+        # not be shown in the chronological index.
 
     main(site_path,
         zettelkasten_path,
         site_title,
         copyright_text,
-        hide_tags)
+        hide_tags,
+        hide_chrono_index_dates)
 
 
 def main(site_path: str,
          zettelkasten_path: str,
          site_title: str,
          copyright_text: str,
-         hide_tags: bool):
+         hide_tags: bool,
+         hide_chrono_index_dates: bool):
     """Generates all the site's files."""
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
@@ -59,7 +63,7 @@ def main(site_path: str,
     zettels = copy_zettels_to_site_folder(zettels, site_posts_path)
 
     print('Creating index files of all published zettels.')
-    create_index_files(zettels)
+    create_index_files(zettels, hide_chrono_index_dates)
 
     print('Searching for any attachments that are linked to in the zettels.')
     n = copy_attachments(zettels, site_posts_path)
@@ -123,19 +127,16 @@ def append_index_links() -> None:
         '<a href="index.html">💡</a>')
 
 
-def create_index_files(zettels: List[Zettel]) -> None:
+def create_index_files(zettels: List[Zettel],
+                       hide_chrono_index_dates: bool) -> None:
     """Creates markdown files that list all the published zettels
     
     The files created are alphabetical-index.md and 
-    chronological-index.md.
+    chronological-index.md. The file index.md is also edited.
     """
-    create_categorical_index_file(zettels)
+    edit_categorical_index_file(zettels)
     create_alphabetical_index_file(zettels)
-    create_chronological_index_file(zettels)
-    alpha_index_path = os.path.abspath('alphabetical-index.md')
-    chrono_index_path = os.path.abspath('chronological-index.md')
-    zettels.append(Zettel(alpha_index_path))
-    zettels.append(Zettel(chrono_index_path))
+    create_chronological_index_file(zettels, hide_chrono_index_dates)
 
 
 def syntax_highlight_code(html_paths: List[str]) -> None:
@@ -506,7 +507,7 @@ def get_paths_of_zettels_to_publish(dir_path: str) -> List[str]:
     return zettels_to_publish
 
 
-def create_categorical_index_file(zettels: List[Zettel]) -> None:
+def edit_categorical_index_file(zettels: List[Zettel]) -> None:
     """Lists all the zettels categorically in index.md
     
     index.md must already exist and contain the `#published` tag and the
@@ -534,13 +535,18 @@ def create_alphabetical_index_file(zettels: List[Zettel]) -> None:
     index = create_alphabetical_index(zettels)
     with open('alphabetical-index.md', 'w', encoding='utf8') as file:
         file.write(index)
+    alpha_index_path = os.path.abspath('alphabetical-index.md')
+    zettels.append(Zettel(alpha_index_path))
 
 
-def create_chronological_index_file(zettels: List[Zettel]) -> None:
+def create_chronological_index_file(zettels: List[Zettel],
+                                    hide_chrono_index_dates: bool) -> None:
     """Lists all the zettels chronologically in a new markdown file."""
-    index = create_chronological_index(zettels)
+    index = create_chronological_index(zettels, hide_chrono_index_dates)
     with open('chronological-index.md', 'w', encoding='utf8') as file:
         file.write(index)
+    chrono_index_path = os.path.abspath('chronological-index.md')
+    zettels.append(Zettel(chrono_index_path))
 
 
 def create_categorical_indexes(zettels: List[Zettel],
@@ -583,7 +589,8 @@ def create_alphabetical_index(zettels: List[Zettel]) -> str:
     return zettel_index
 
 
-def create_chronological_index(zettels: List[Zettel]) -> str:
+def create_chronological_index(zettels: List[Zettel],
+                               hide_chrono_index_dates: bool) -> str:
     """Creates a chronologized markdown list of all zettels' links
     
     Excludes zettels that have alpha characters in their IDs.
@@ -592,20 +599,13 @@ def create_chronological_index(zettels: List[Zettel]) -> str:
     sorted_zettels = sorted(zettels, key=lambda z: z.id, reverse=True)
     for zettel in sorted_zettels:
         if zettel.id.isnumeric():
-            date = zettel.id[0:4] + '/' + zettel.id[4:6] + '/' + zettel.id[6:8]
-            numeric_links.append('* ' + date + ' ' + zettel.link)
+            if hide_chrono_index_dates:
+                numeric_links.append('* ' + zettel.link)
+            else:
+                date = f'{zettel.id[0:4]}/{zettel.id[4:6]}/{zettel.id[6:8]}'
+                numeric_links.append('* ' + date + ' ' + zettel.link)
     zettel_index = '## chronological index\n\n' + '\n'.join(numeric_links)
     return zettel_index
-
-
-def get_zettel_title(zettel_path: str) -> str:
-    """Gets a zettel's title (its first header level 1)."""
-    with open(zettel_path, 'r', encoding='utf8') as file:
-        contents = file.read()
-    match = patterns.tags.search(contents)
-    if match:
-        return match[0]
-    raise ValueError('Each zettel needs a title.')
 
 
 def delete_site_md_files(site_posts_path: str) -> None:
