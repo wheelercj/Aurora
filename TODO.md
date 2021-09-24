@@ -1,6 +1,5 @@
 # TODO
 
-* automatically remove unused images from the site's images folder
-* Check for external link rot
-* add a search feature to index.html. Make it work with tags too.
-* website breadcrumbs
+* automatically remove unused attachments
+* check for external link rot
+* make it easier to customize the CSS and important variables

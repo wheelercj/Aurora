@@ -1,6 +1,6 @@
 # external imports
 import os
-from typing import List
+from typing import List, Optional
 
 # internal imports
 from patterns import patterns
@@ -57,3 +57,18 @@ class Zettel:
             contents = file.read()
         tags: List[str] = patterns.tags.findall(contents)
         return tags
+
+
+def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
+    """Gets a zettel by its zettel ID."""
+    for zettel in zettels:
+        if zettel.id == link_id:
+            return zettel
+
+
+def get_zettel_by_file_name(file_name: str,
+                            zettels: List[Zettel]) -> Optional[Zettel]:
+    """Gets a zettel by its file name, not including the extension."""
+    for zettel in zettels:
+        if file_name + '.md' == zettel.get_zettel_file_name():
+            return zettel
