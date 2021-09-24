@@ -392,8 +392,8 @@ def wrap_template_html(all_html_paths: List[str], site_title: str) -> None:
             file.truncate(0)
             file.seek(0)  # Without this, \x00 would be inserted into
                 # the front of the file.
-            if not file_name_is_numeric(path):
-                header_html = get_header_html(site_title, '..')
+            if file_name_is_numeric(path):
+                header_html = get_header_html(site_title, '../')
             else:
                 header_html = get_header_html(site_title)
             footer_html = get_footer_html()
@@ -413,7 +413,7 @@ def get_header_html(site_title: str, folder_name: str = '') -> str:
     """Retrieves the site's header HTML and inserts variable values."""
     header_html = get_header_html_from_file()
     header_html = header_html.replace('{site_title}', site_title)
-    header_html = header_html.replace('{folder}', folder_name + '/')
+    header_html = header_html.replace('{folder}', folder_name)
         # These literal strings are not supposed to be f-strings.
 
     return header_html
