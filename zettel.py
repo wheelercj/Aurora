@@ -70,5 +70,5 @@ def get_zettel_by_file_name(file_name: str,
                             zettels: List[Zettel]) -> Optional[Zettel]:
     """Gets a zettel by its file name, not including the extension."""
     for zettel in zettels:
-        if file_name + '.md' == zettel.get_zettel_file_name():
+        if file_name + '.md' == zettel.file_name:
             return zettel
