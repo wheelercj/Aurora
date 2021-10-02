@@ -11,6 +11,7 @@ import logging
 logging.basicConfig(level=logging.WARNING)  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
+from settings import load_settings
 from zettel import Zettel, get_zettel_by_file_name
 from patterns import patterns
 from convert_links import convert_links_from_zk_to_md
@@ -18,30 +19,11 @@ from convert_links import convert_links_from_zk_to_md
 
 def main():
     """Generates all the site's files."""
-    zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-    site_path = 'C:/Users/chris/Documents/site'
-    site_title = "Chris' notes"
-    copyright_text = '© 2021 Chris Wheeler'
-    hide_tags = True   # If true, tags will be removed from the copied 
-        # zettels when generating the site.
-    hide_chrono_index_dates = True  # If true, file creation dates will
-        # not be shown in the chronological index.
+    logging.info('Getting the application settings.')
+    settings = load_settings(fallback_option='prompt user')
+    site_path = settings['site path']
+    zettelkasten_path = settings['zettelkasten path']
 
-    generate_site(site_path,
-        zettelkasten_path,
-        site_title,
-        copyright_text,
-        hide_tags,
-        hide_chrono_index_dates)
-
-
-def generate_site(site_path: str,
-         zettelkasten_path: str,
-         site_title: str,
-         copyright_text: str,
-         hide_tags: bool,
-         hide_chrono_index_dates: bool):
-    """Generates all the site's files."""
     this_dir, _ = os.path.split(__file__)
     if site_path == zettelkasten_path or site_path == this_dir:
         raise ValueError('The zettelkasten, the website\'s files, and this ' \
@@ -64,14 +46,14 @@ def generate_site(site_path: str,
     zettels = copy_zettels_to_site_folder(zettels, site_path, site_posts_path)
 
     logging.info('Creating index files of all published zettels.')
-    create_index_files(zettels, site_path, hide_chrono_index_dates)
+    create_index_files(zettels, site_path, settings['hide chrono index dates'])
 
     logging.info('Searching for any attachments that are linked to in ' \
         'the zettels.')
     n = copy_attachments(zettels, site_posts_path)
     logging.info(f'Found {n} attachments and copied them to {site_posts_path}')
 
-    reformat_zettels(zettels, hide_tags)
+    reformat_zettels(zettels, settings['hide tags'])
     new_html_paths = regenerate_html_files(zettels, site_path, site_posts_path)
 
     fix_image_links(new_html_paths)
@@ -84,8 +66,8 @@ def generate_site(site_path: str,
 
     logging.info('Inserting the site header, footer, etc. into each file.')
     append_index_links(site_path)
-    append_copyright_notice(site_path, copyright_text)
-    wrap_template_html(new_html_paths, site_title)
+    append_copyright_notice(site_path, settings['copyright text'])
+    wrap_template_html(new_html_paths, settings['site title'])
 
     logging.info('Checking for style.css.')
     check_style(site_path)

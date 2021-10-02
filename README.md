@@ -13,15 +13,8 @@ After setting up once (explained below), you can add more HTML pages to your web
 2. In your zettelkasten folder, create `index.md` and `about.md`. `index.md` will later become your site's homepage, and has special options explained in the next steps. You can write whatever you would like in `about.md`.
 3. In your zettelkasten folder, add the `#published` tag to each markdown file that you want to publish, including `index.md` and `about.md`. Only files with this tag will be copied to the site folder.
 4. In `index.md`, add other tags for the categories of zettels you want links to be listed for. When zk-ssg makes a copy of `index.md`, in that copy, it will automatically replace each of the tags (except `#published`) with links to zettels that also have that same tag. Any headers, empty lines, etc. you added to the file around the tags will be kept, so you will probably want to spread the tags out. [Here's](https://gist.github.com/wheelercj/f5a974277f2d6096471a88a2c27562f0) an example of how you can write `index.md`.
-5. In `generate_site.py`, near the top of the file are some variables you will want to customize. Their defaults are what I use for my site:
-```python
-zettelkasten_path = 'C:/Users/chris/Documents/zettelkasten'
-site_path = 'C:/Users/chris/Documents/site'
-site_title = "Chris' notes"
-copyright_text = '© 2021 Chris Wheeler'
-```
-6. You might also want to customize `style.css`, such as to change the site's colors.
-7. Run this program. Now you're ready to send your new HTML files to your site's host! If you don't have one yet, [GitHub Pages](https://pages.github.com/) is worth considering.
+5. You might want to customize `style.css`, such as to change the site's colors.
+6. Run this program. Now you're ready to send your new HTML files to your site's host! If you don't have one yet, [GitHub Pages](https://pages.github.com/) is worth considering.
 
 ## Current limitations
 * You can only choose one folder for the program to copy files from.
