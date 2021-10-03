@@ -421,9 +421,8 @@ def get_header_html(site_title: str,
     header_file_path = os.path.join(site_path, 'header.html')
     with open(header_file_path, 'r', encoding='utf8') as file:
         header_html = file.read()
-    header_html = header_html.replace('{site_title}', site_title)
-    header_html = header_html.replace('{folder}', relative_site_path)
-        # These literal strings are not supposed to be f-strings.
+    header_html = header_html.replace('{{site_title}}', site_title)
+    header_html = header_html.replace('{{folder}}', relative_site_path)
     return header_html
 
 
@@ -433,8 +432,7 @@ def get_footer_html(site_path: str, footer_text: str = '') -> str:
     footer_file_path = os.path.join(site_path, 'footer.html')
     with open(footer_file_path, 'r', encoding='utf8') as file:
         footer_html = file.read()
-    footer_html = footer_html.replace('{footer}', footer_text)
-        # The literal string is not supposed to be an f-string.
+    footer_html = footer_html.replace('{{footer_text}}', footer_text)
     return footer_html
 
 
