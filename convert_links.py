@@ -27,18 +27,16 @@ def convert_links_from_zk_to_md(
         needed for custom link formatting or if the zettels are not in 
         the same folder.
     """
+    if md_linker is None:
+        md_linker = lambda _, linked_z: f'[{linked_z.title}]({linked_z.id}.md)'
     for zettel in zettels:
-        new_contents = convert_zettel_links_from_zk_to_md(zettel,
-                                                          zettels,
-                                                          md_linker)
-        if new_contents is not None:
-            save_zettel(new_contents, zettel)
+        convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker)
 
 
 def convert_zettel_links_from_zk_to_md(
         zettel: Zettel,
         zettels: List[Zettel],
-        md_linker: Optional[md_linker_type] = None) -> Optional[str]:
+        md_linker: md_linker_type) -> None:
     """Converts links in one zettel from the zk to the md format.
     
     Logs warnings for links that have valid IDs but outdated titles.
@@ -49,21 +47,13 @@ def convert_zettel_links_from_zk_to_md(
         The zettel to convert links in.
     zettels : List[Zettel]
         All of the zettels that might be linked to.
-    md_linker : Optional[Callable[[Zettel, Zettel], str]]
+    md_linker : Callable[[Zettel, Zettel], str]
         A function that takes two zettels as arguments and returns a 
-        markdown link from the first zettel to the second one. Only 
-        needed for custom link formatting or if the zettels are not in 
-        the same folder.
-
-    Returns
-    -------
-    str or None
-        The zettel's new unsaved contents, or None if the zettel is 
-        empty or cannot be accessed for some reason.
+        markdown link from the first zettel to the second one.
     """
     contents = get_contents(zettel)
-    if contents is None:
-        return None
+    if not contents:
+        return
     link_ids: List[str] = patterns.zettel_link_id.findall(contents)
     for link_id in set(link_ids):
         linked_z = get_zettel_by_id(link_id, zettels)
@@ -71,14 +61,10 @@ def convert_zettel_links_from_zk_to_md(
             logging.warning(f'`{zettel.title}` has a link with a valid ID ' \
                 f'but an outdated title. It should be: {linked_z.link}')
         
-        if md_linker is not None:
-            markdown_link = md_linker(zettel, linked_z)
-        else:
-            markdown_link = f'[{linked_z.title}]({linked_z.id}.md)'
-
+        markdown_link = md_linker(zettel, linked_z)
         contents = contents.replace(linked_z.link, markdown_link)
 
-    return contents
+    save_zettel(contents, zettel)
 
 
 def save_zettel(contents: str, zettel: Zettel) -> None:
