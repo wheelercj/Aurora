@@ -67,7 +67,8 @@ def main():
     logging.info('Inserting the site header, footer, etc. into each file.')
     append_index_links(site_path)
     append_copyright_notice(site_path, settings['copyright text'])
-    wrap_template_html(new_html_paths, settings['site title'])
+    copy_template_html_files(site_path)
+    wrap_template_html(site_path, new_html_paths, settings['site title'])
 
     logging.info('Checking for style.css.')
     check_style(site_path)
@@ -366,8 +367,20 @@ def append_text(file_path: str, text: str) -> None:
         file.write(text)
 
 
-def wrap_template_html(all_html_paths: List[str], site_title: str) -> None:
-    """Wraps each HTML file's contents with a header and footer."""
+def copy_template_html_files(site_path: str) -> None:
+    """Copies header.html and footer.html into the site folder."""
+    shutil.copy('header.html', site_path)
+    shutil.copy('footer.html', site_path)
+
+
+def wrap_template_html(site_path: str,
+                       all_html_paths: List[str],
+                       site_title: str) -> None:
+    """Wraps each HTML file's contents with a header and footer.
+    
+    The header and footer used are retrieved from the copies of 
+    header.html and footer.html that are in the site folder.
+    """
     for path in all_html_paths:
         with open(path, 'r+', encoding='utf8') as file:
             contents = file.read()
@@ -375,10 +388,10 @@ def wrap_template_html(all_html_paths: List[str], site_title: str) -> None:
             file.seek(0)  # Without this, \x00 would be inserted into
                 # the front of the file.
             if file_name_is_numeric(path):
-                header_html = get_header_html(site_title, '../')
+                header_html = get_header_html(site_title, site_path, '../')
             else:
-                header_html = get_header_html(site_title)
-            footer_html = get_footer_html()
+                header_html = get_header_html(site_title, site_path)
+            footer_html = get_footer_html(site_path)
             file.write(header_html + contents + footer_html)
 
 
@@ -386,37 +399,42 @@ def file_name_is_numeric(path: str) -> bool:
     """Determines if the file the path is for has a numeric name."""
     _, name_and_extension = os.path.split(path)
     name, _ = os.path.splitext(name_and_extension)
-    if name.isnumeric():
-        return True
-    return False
-
-
-def get_header_html(site_title: str, folder_name: str = '') -> str:
-    """Retrieves the site's header HTML and inserts variable values."""
-    header_html = get_header_html_from_file()
-    header_html = header_html.replace('{site_title}', site_title)
-    header_html = header_html.replace('{folder}', folder_name)
-        # These literal strings are not supposed to be f-strings.
-
-    return header_html
+    return name.isnumeric()
 
 
 @cache
-def get_header_html_from_file() -> str:
-    """Retrieves the site's header HTML from header.html."""
-    with open('header.html', 'r', encoding='utf8') as file:
+def get_header_html(site_title: str,
+                    site_path: str,
+                    relative_site_path: str = '') -> str:
+    """Retrieves the site's header HTML from header.html.
+    
+    Parameters
+    ----------
+    site_title : str
+        The title that will appear on the site.
+    site_path : str
+        The absolute path to the site's root folder.
+    relative_site_path : str
+        The relative path to the site's root folder from the HTML file 
+        that this function is being called for.
+    """
+    header_file_path = os.path.join(site_path, 'header.html')
+    with open(header_file_path, 'r', encoding='utf8') as file:
         header_html = file.read()
+    header_html = header_html.replace('{site_title}', site_title)
+    header_html = header_html.replace('{folder}', relative_site_path)
+        # These literal strings are not supposed to be f-strings.
     return header_html
 
 
 @cache
-def get_footer_html(footer: str = '') -> str:
+def get_footer_html(site_path: str, footer_text: str = '') -> str:
     """Retrieves the site's footer HTML from footer.html."""
-    with open('footer.html', 'r', encoding='utf8') as file:
+    footer_file_path = os.path.join(site_path, 'footer.html')
+    with open(footer_file_path, 'r', encoding='utf8') as file:
         footer_html = file.read()
-    footer_html = footer_html.replace('{footer}', footer)
+    footer_html = footer_html.replace('{footer}', footer_text)
         # The literal string is not supposed to be an f-string.
-
     return footer_html
 
 
