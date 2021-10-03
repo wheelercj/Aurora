@@ -1,16 +1,15 @@
 # external imports
-import re
 from typing import List, Tuple, Optional
 import logging
 
 # internal imports
 from zettel import Zettel, get_zettel_by_id
+import patterns
 
 
 def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
     """Converts links in multiple zettels from the zk to the md format."""
     logging.info(f'Converting internal links from the zk to the md format.')
-    link_id_pattern = re.compile(r'(?<=\[\[)\d{14}(?=\]\])')
     total_char_count = 0
     total_n_replaced = 0
 
@@ -20,7 +19,7 @@ def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
             continue
 
         char_count_1 = len(contents)
-        n_replaced, contents = convert_links(link_id_pattern,
+        n_replaced, contents = convert_links(patterns.zettel_link_id,
                                              contents,
                                              zettel,
                                              zettels)
