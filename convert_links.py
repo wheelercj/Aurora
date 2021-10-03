@@ -11,7 +11,8 @@ md_linker_type = Callable[[Zettel, Zettel], str]
 
 
 def convert_links_from_zk_to_md(
-        zettels: List[Zettel],
+        zettels: List[Zettel] = [],
+        zettel_paths: List[str] = [],
         md_linker: Optional[md_linker_type] = None) -> None:
     """Converts links in multiple zettels from the zk to the md format.
     
@@ -20,15 +21,23 @@ def convert_links_from_zk_to_md(
     Parameters
     ----------
     zettels : List[Zettel]
-        All of the zettels to convert links in.
+        All of the zettels to convert links in. Only needed if 
+        zettel_paths is an empty list.
+    zettel_paths : List[str]
+        The paths of all the zettels to convert links in. Only needed if
+        zettels is an empty list. If both zettels and zettel_paths are 
+        not empty, they will both be used.
     md_linker : Optional[Callable[[Zettel, Zettel], str]]
         A function that takes two zettels as arguments and returns a 
         markdown link from the first zettel to the second one. Only 
         needed for custom link formatting or if the zettels are not in 
         the same folder.
     """
+    if zettel_paths:
+        zettels.extend([Zettel(z) for z in zettel_paths])
     if md_linker is None:
-        md_linker = lambda _, linked_z: f'[{linked_z.title}]({linked_z.id}.md)'
+        md_linker = lambda _, linked_z: \
+            f'[{linked_z.title}]({linked_z.file_name})'
     for zettel in zettels:
         convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker)
 

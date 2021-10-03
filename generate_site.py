@@ -215,7 +215,7 @@ def reformat_zettels(zettels: List[Zettel], hide_tags: bool) -> None:
     if (hide_tags):
         remove_all_tags(zettels)
     logging.info(f'Converting internal links from the zk to the md format.')
-    convert_links_from_zk_to_md(zettels, create_markdown_link)
+    convert_links_from_zk_to_md(zettels, md_linker=create_markdown_link)
     redirect_links_from_md_to_html(zettels)
 
 
