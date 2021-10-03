@@ -214,8 +214,24 @@ def reformat_zettels(zettels: List[Zettel], hide_tags: bool) -> None:
     make_file_paths_absolute(zettels)
     if (hide_tags):
         remove_all_tags(zettels)
-    convert_links_from_zk_to_md(zettels)
+    logging.info(f'Converting internal links from the zk to the md format.')
+    convert_links_from_zk_to_md(zettels, create_markdown_link)
     redirect_links_from_md_to_html(zettels)
+
+
+def create_markdown_link(zettel: Zettel, linked_zettel: Zettel) -> str:
+    """Creates a markdown link from one zettel to another.
+    
+    Prefixes the links with `[§] `, and points some of the links to the
+    posts folder.
+    """
+    if linked_zettel.id.isnumeric() and not zettel.id.isnumeric():
+        markdown_link = f'[[§] {linked_zettel.title}]' \
+            f'(posts/{linked_zettel.id}.md)'
+    else:
+        markdown_link = f'[[§] {linked_zettel.title}]' \
+            f'({linked_zettel.id}.md)'
+    return markdown_link
 
 
 def regenerate_html_files(zettels: List[Zettel],

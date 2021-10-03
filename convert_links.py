@@ -1,83 +1,109 @@
 # external imports
-from typing import List, Tuple, Optional
+from typing import List, Optional, Callable
 import logging
 
 # internal imports
 from zettel import Zettel, get_zettel_by_id
-import patterns
+from patterns import patterns
 
 
-def convert_links_from_zk_to_md(zettels: List[Zettel]) -> None:
-    """Converts links in multiple zettels from the zk to the md format."""
-    logging.info(f'Converting internal links from the zk to the md format.')
-    total_char_count = 0
-    total_n_replaced = 0
+md_linker_type = Callable[[Zettel, Zettel], str]
 
+
+def convert_links_from_zk_to_md(
+        zettels: List[Zettel],
+        md_linker: Optional[md_linker_type] = None) -> None:
+    """Converts links in multiple zettels from the zk to the md format.
+    
+    Logs warnings for links that have valid IDs but outdated titles.
+
+    Parameters
+    ----------
+    zettels : List[Zettel]
+        All of the zettels to convert links in.
+    md_linker : Optional[Callable[[Zettel, Zettel], str]]
+        A function that takes two zettels as arguments and returns a 
+        markdown link from the first zettel to the second one. Only 
+        needed for custom link formatting or if the zettels are not in 
+        the same folder.
+    """
     for zettel in zettels:
-        contents = get_contents(zettel)
-        if contents is None:
-            continue
+        new_contents = convert_zettel_links_from_zk_to_md(zettel,
+                                                          zettels,
+                                                          md_linker)
+        if new_contents is not None:
+            save_zettel(new_contents, zettel)
 
-        char_count_1 = len(contents)
-        n_replaced, contents = convert_links(patterns.zettel_link_id,
-                                             contents,
-                                             zettel,
-                                             zettels)
-        char_count_2 = len(contents)
 
-        # Save contents back to the zettel.
-        if n_replaced:
-            with open(zettel.path, 'w', encoding='utf8') as file:
-                file.write(contents)
+def convert_zettel_links_from_zk_to_md(
+        zettel: Zettel,
+        zettels: List[Zettel],
+        md_linker: Optional[md_linker_type] = None) -> Optional[str]:
+    """Converts links in one zettel from the zk to the md format.
+    
+    Logs warnings for links that have valid IDs but outdated titles.
 
-        # Log character change stats.
-        char_count = char_count_2 - char_count_1
-        if n_replaced:
-            logging.info(f'    Changed `{zettel.title}` by {char_count} ' \
-                f'characters with {n_replaced} links converted.')
-        total_char_count += char_count
-        total_n_replaced += n_replaced
+    Parameters
+    ----------
+    zettel : Zettel
+        The zettel to convert links in.
+    zettels : List[Zettel]
+        All of the zettels that might be linked to.
+    md_linker : Optional[Callable[[Zettel, Zettel], str]]
+        A function that takes two zettels as arguments and returns a 
+        markdown link from the first zettel to the second one. Only 
+        needed for custom link formatting or if the zettels are not in 
+        the same folder.
 
-    logging.info(f'  Changed {len(zettels)} zettels by a total of ' \
-        f'{total_char_count} characters with {total_n_replaced} links ' \
-        'converted from the zk to the md format.')
+    Returns
+    -------
+    str or None
+        The zettel's new unsaved contents, or None if the zettel is 
+        empty or cannot be accessed for some reason.
+    """
+    contents = get_contents(zettel)
+    if contents is None:
+        return None
+    link_ids: List[str] = patterns.zettel_link_id.findall(contents)
+    for link_id in set(link_ids):
+        linked_z = get_zettel_by_id(link_id, zettels)
+        if linked_z.link not in contents:
+            logging.warning(f'`{zettel.title}` has a link with a valid ID ' \
+                f'but an outdated title. It should be: {linked_z.link}')
+        
+        if md_linker is not None:
+            markdown_link = md_linker(zettel, linked_z)
+        else:
+            markdown_link = f'[{linked_z.title}]({linked_z.id}.md)'
+
+        contents = contents.replace(linked_z.link, markdown_link)
+
+    return contents
+
+
+def save_zettel(contents: str, zettel: Zettel) -> None:
+    """Overwrites a zettel with new contents."""
+    with open(zettel.path, 'w', encoding='utf8') as file:
+        file.write(contents)
 
 
 def get_contents(zettel: Zettel) -> Optional[str]:
-    """Gets the contents of a zettel
+    """Gets the contents of a zettel.
     
-    Returns None and logs an error message if attempting to open the 
-    zettel raised OSError.
+    Logs a warning if attempting to open the zettel raises OSError.
+
+    Returns
+    -------
+    str or None
+        The zettel's contents, or None if attempting to open the zettel 
+        raises OSError.
     """
     try:
         with open(zettel.path, 'r', encoding='utf8') as file:
             contents = file.read()
-            return contents
     except OSError:
         logging.warning(f'  Zettel not found: `{zettel.title}` at ' \
             f'{zettel.path}')
         return None
-
-
-def convert_links(link_id_pattern: str,
-                  contents: str,
-                  zettel: Zettel,
-                  zettels: List[Zettel]) -> Tuple[int, str]:
-    """Converts links in one zettel from the zk to the md format
-    
-    Returns the number of links converted and the new contents with the 
-    converted links.
-    """
-    link_ids: List[str] = link_id_pattern.findall(contents)
-    for link_id in set(link_ids):
-        linked_z = get_zettel_by_id(link_id, zettels)
-        if not contents.count(linked_z.link):
-            logging.warning(f'`{zettel.title}` has an outdated link' \
-                f' title. It should be: {linked_z.link}')
-        if linked_z.id.isnumeric() and not zettel.id.isnumeric():
-            markdown_link = f'[[§] {linked_z.title}](posts/{linked_z.id}.md)'
-        else:
-            markdown_link = f'[[§] {linked_z.title}]({linked_z.id}.md)'
-        contents = contents.replace(linked_z.link, markdown_link)
-
-    return len(link_ids), contents
+    else:
+        return contents
