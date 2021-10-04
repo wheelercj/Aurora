@@ -437,9 +437,24 @@ def append_text(file_path: str, text: str) -> None:
 
 
 def copy_template_html_files(site_path: str) -> None:
-    """Copies header.html and footer.html into the site folder."""
-    shutil.copy('header.html', site_path)
-    shutil.copy('footer.html', site_path)
+    """Copies header and footer .html to the site folder iff they're'nt there."""
+    copy_file_iff_not_present('header.html', site_path)
+    copy_file_iff_not_present('footer.html', site_path)
+
+
+def copy_file_iff_not_present(file_name: str, site_path: str) -> str:
+    """Copies a file from this dir to the site dir iff it's not there.
+    
+    Returns the file's path whether it was already there or newly copied.
+    """
+    site_file_path = os.path.join(site_path, file_name)
+    if os.path.isfile(site_file_path):
+        logging.info(f'  {file_name} already exists. The file will not be ' \
+            'replaced.')
+    else:
+        logging.info(f'  {file_name} was not found. Providing a new copy.')
+        shutil.copy(file_name, site_path)
+    return site_file_path
 
 
 def wrap_template_html(site_path: str,
@@ -738,16 +753,7 @@ def check_style(site_path: str, settings: dict) -> None:
     If style.css is already there, this function only tries to update 
     the file.
     """
-    site_style_path = os.path.join(site_path, 'style.css')
-    if os.path.isfile(site_style_path):
-        logging.info('  style.css already exists. The file will not be ' \
-            'replaced.')
-    else:
-        logging.info('  style.css was not found. Providing a new copy.')
-        this_dir, _ = os.path.split(__file__)
-        this_style_path = os.path.join(this_dir, 'style.css')
-        shutil.copy(this_style_path, site_path)
-
+    site_style_path = copy_file_iff_not_present('style.css', site_path)
     try:
         update_css(site_style_path, settings)
     except ValueError:
