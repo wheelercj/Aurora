@@ -5,34 +5,78 @@ import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
-from typing import List, Tuple, Dict, Any
+import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+from typing import List, Tuple, Dict, Optional, Any
 from functools import cache
 import logging
 logging.basicConfig(level=logging.WARNING)  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
-from settings import load_settings
+from settings import show_settings_window, load_settings
 from zettel import Zettel, get_zettel_by_file_name
 from patterns import patterns
 from convert_links import convert_links_from_zk_to_md
 
 
-def main():
+def show_main_menu() -> None:
+    """Runs the main menu."""
+    window = create_main_menu_window()
+    settings = None
+    while True:
+        event, _ = window.read()
+        if event == sg.WIN_CLOSED or event == 'exit':
+            window.close()
+            return
+        window.Hide()
+        settings = respond_to_main_menu_event(event, settings)
+        window.UnHide()
+
+
+def create_main_menu_window() -> sg.Window:
+    """Creates and displays the main menu."""
+    sg.theme('DarkAmber')
+    layout = [[sg.Button('generate site', size=(14, 1), pad=(40, 5))],
+              [sg.Button('settings', size=(14, 1), pad=(40, 5))],
+              [sg.Button('exit', size=(14, 1), pad=(40, 5))]]
+    return sg.Window('zk-ssg', layout)
+
+
+def respond_to_main_menu_event(
+        event,
+        settings: Optional[dict]) -> Optional[dict]:
+    """Handles main menu events."""
+    if event == 'generate site':
+        generate_site(settings)
+    elif event == 'settings':
+        settings = show_settings_window(settings)
+    return settings
+
+
+def show_progress(n):
+    sg.one_line_progress_meter('generating the site', n, 100, 'progress meter')
+
+
+def generate_site(settings: Optional[dict]) -> None:
     """Generates all the site's files."""
+    show_progress(0)
     logging.info('Getting the application settings.')
-    settings = load_settings(fallback_option='prompt user')
+    if not settings:
+        settings = load_settings('prompt user')
     site_path = settings['site path']
     zettelkasten_path = settings['zettelkasten path']
 
     this_dir, _ = os.path.split(__file__)
-    if site_path == zettelkasten_path or site_path == this_dir:
+    if 3 > len({this_dir, site_path, zettelkasten_path}):
         raise ValueError('The zettelkasten, the website\'s files, and this ' \
             'program\'s files should probably be in different folders.')
 
     logging.info('Finding zettels that contain `#published`.')
+    show_progress(2)
     zettels = get_zettels_to_publish(zettelkasten_path)
     logging.info(f'Found {len(zettels)} zettels that contain `#published`.')
+    show_progress(5)
     check_links(zettels)
+    show_progress(10)
     
     logging.info('Creating the posts folder if it doesn\'t already exist.')
     site_posts_path = os.path.join(site_path, 'posts')
@@ -43,25 +87,31 @@ def main():
     delete_site_md_files(site_posts_path)
 
     logging.info(f'Copying the zettels to {site_path}')
+    show_progress(12)
     zettels = copy_zettels_to_site_folder(zettels, site_path, site_posts_path)
 
     logging.info('Creating index files of all published zettels.')
+    show_progress(15)
     create_index_files(zettels, site_path, settings['hide chrono index dates'])
 
     logging.info('Searching for any attachments that are linked to in ' \
         'the zettels.')
+    show_progress(20)
     n = copy_attachments(zettels, site_posts_path)
     logging.info(f'Found {n} attachments and copied them to {site_posts_path}')
 
     reformat_zettels(zettels, settings['hide tags'])
+    show_progress(25)
     new_html_paths = regenerate_html_files(zettels, site_path, site_posts_path)
 
     fix_image_links(new_html_paths)
+    show_progress(50)
     n = convert_attachment_links(new_html_paths)
     logging.info(f'Converted {n} attachment links from the md to the ' \
         'html format.')
 
     logging.info('Adding syntax highlighting to code in codeblocks.')
+    show_progress(60)
     syntax_highlight_code(new_html_paths)
 
     logging.info('Inserting the site header, footer, etc. into each file.')
@@ -69,15 +119,18 @@ def main():
     append_copyright_notice(site_path, settings['copyright text'])
     copy_template_html_files(site_path)
     wrap_template_html(site_path, new_html_paths, settings['site title'])
+    show_progress(85)
 
     logging.info('Checking for style.css.')
     check_style(site_path, settings)
+    show_progress(95)
 
     logging.info('\nGenerated HTML files:')
     for path in new_html_paths:
         logging.info(f'  {path}')
 
     print(f'Successfully generated {len(new_html_paths)} HTML files.')
+    show_progress(100)
 
 
 def append_copyright_notice(site_path, copyright_text) -> None:
@@ -774,4 +827,4 @@ def delete_old_html_files(old_html_paths: List[str],
 
 
 if __name__ == '__main__':
-    main()
+    show_main_menu()

@@ -1,7 +1,19 @@
 from datetime import datetime
 import json
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+
+
+def show_settings_window(settings: Optional[dict]) -> Dict[str, Union[str, bool]]:
+    """Runs the settings menu."""
+    if not settings:
+        settings = load_settings(fallback_option='default settings')
+    window = create_settings_window(settings)
+    event, values = window.read()
+    if event != sg.WIN_CLOSED and event != 'cancel':
+        save_settings(values)
+    window.close()
+    return values
 
 
 def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
@@ -95,21 +107,8 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
     }
 
 
-def show_settings_window() -> Dict[str, Union[str, bool]]:
+def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
     """Creates and displays the settings menu."""
-    layout = create_settings_window_layout()
-    window = sg.Window('zk-ssg settings', layout)
-    event, values = window.read()
-    if event != sg.WIN_CLOSED and event != 'cancel':
-        save_settings(values)
-    window.close()
-    return values
-
-
-def create_settings_window_layout() -> list:
-    """Prepares the settings menu appearance and content."""
-    settings = load_settings(fallback_option='default settings')
-
     sg.theme('DarkAmber')
     layout = [  
         [sg.Text('site title: '),
@@ -165,4 +164,5 @@ def create_settings_window_layout() -> list:
         [sg.HorizontalSeparator()],
         [sg.Button('save'), sg.Button('cancel')] ]
 
-    return layout
+    return sg.Window('zk-ssg settings', layout)
+
