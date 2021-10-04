@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 from typing import Dict, Union
-import PySimpleGUI as sg
+import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 
 
 def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
@@ -33,6 +33,20 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     'copyright text' : str
         The copyright notice that will appear at the bottom of the 
         index page.
+    'body background color' : str
+        The color of the background of the site as a hex RGB string.
+    'header background color' : str
+        The color of the background of the header as a hex RGB string.
+    'header text color' : str
+        The color of the text in the header as a hex RGB string.
+    'header hover color' : str
+        The color of links in the header when they are hovered over, as 
+        a hex RGB string.
+    'body link color' : str
+        The color of links in the body, as a hex RGB string.
+    'body hover color' : str
+        The color of links in the body when they are hovered over, as 
+        a hex RGB string.
     'hide tags' : bool
         If true, tags will be removed from the copied zettels when 
         generating the site.
@@ -70,6 +84,12 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         'site path': '',
         'site title': '',
         'copyright text': f'© {this_year}, your name',
+        'body background color': '#fffafa',  # snow
+        'header background color': '#81b622',  # lime green
+        'header text color': '#ecf87f',  # yellow green
+        'header hover color': '#3d550c',  # olive green
+        'body link color': '#59981a',  # green
+        'body hover color': '#3d550c',  # olive green
         'hide tags': True,
         'hide chrono index dates': True
     }
@@ -106,6 +126,36 @@ def create_settings_window_layout() -> list:
         [sg.Text('copyright text: '),
             sg.Input(key='copyright text',
                 default_text=settings['copyright text'])],
+        [sg.Text('body background color: '),
+            sg.ColorChooserButton('choose',
+                target='body background color'),
+            sg.Input(key='body background color',
+                default_text=settings['body background color'])],
+        [sg.Text('header background color: '),
+            sg.ColorChooserButton('choose',
+                target='header background color'),
+            sg.Input(key='header background color',
+                default_text=settings['header background color'])],
+        [sg.Text('header text color: '),
+            sg.ColorChooserButton('choose',
+                target='header text color'),
+            sg.Input(key='header text color',
+                default_text=settings['header text color'])],
+        [sg.Text('header hover color: '),
+            sg.ColorChooserButton('choose',
+                target='header hover color'),
+            sg.Input(key='header hover color',
+                default_text=settings['header hover color'])],
+        [sg.Text('body link color: '),
+            sg.ColorChooserButton('choose',
+                target='body link color'),
+            sg.Input(key='body link color',
+                default_text=settings['body link color'])],
+        [sg.Text('body hover color: '),
+            sg.ColorChooserButton('choose',
+                target='body hover color'),
+            sg.Input(key='body hover color',
+                default_text=settings['body hover color'])],
         [sg.Checkbox('hide tags',
             key='hide tags',
             default=settings['hide tags'])],

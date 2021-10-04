@@ -71,7 +71,7 @@ def main():
     wrap_template_html(site_path, new_html_paths, settings['site title'])
 
     logging.info('Checking for style.css.')
-    check_style(site_path)
+    check_style(site_path, settings)
 
     logging.info('\nGenerated HTML files:')
     for path in new_html_paths:
@@ -679,20 +679,58 @@ def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
     return all_attachment_paths
 
 
-def check_style(site_path: str) -> None:
-    """Copies style.css into the site folder if it's not there already
+def check_style(site_path: str, settings: dict) -> None:
+    """Copies style.css into the site folder and settings into style.css.
     
-    If style.css is already there, this function does nothing.
+    If style.css is already there, this function only tries to update 
+    the file.
     """
     site_style_path = os.path.join(site_path, 'style.css')
     if os.path.isfile(site_style_path):
         logging.info('  style.css already exists. The file will not be ' \
-            'changed.')
+            'replaced.')
     else:
         logging.info('  style.css was not found. Providing a new copy.')
         this_dir, _ = os.path.split(__file__)
         this_style_path = os.path.join(this_dir, 'style.css')
         shutil.copy(this_style_path, site_path)
+
+    try:
+        update_css(site_style_path, settings)
+    except ValueError:
+        logging.error('  style.css cannot be parsed.')
+
+
+def update_css(site_style_path: str, settings: dict) -> None:
+    """Updates the site's copy of style.css with the user's settings.
+    
+    Raises ValueError if the file cannot be parsed.
+    """
+    with open(site_style_path, 'r', encoding='utf8') as file:
+        contents = file.read()
+
+    body_color_pattern = re.compile(r'(?<=html body {\n    background-color: ).+(?=;\n)')
+    header_color_pattern = re.compile(r'(?<=header {\n    background-color: ).+(?=;\n)')
+    header_text_color_pattern = re.compile(r'(?<=nav a {\n    color: ).+(?=;\n)')
+    header_hover_color_pattern = re.compile(r'(?<=nav a:hover {\n    color: ).+(?=;\n)')
+    body_link_color_pattern = re.compile(r'(?<=main a {\n    color: ).+(?=;\n)')
+    body_hover_color_pattern = re.compile(r'(?<=main a:hover {\n    color: ).+(?=;\n)')
+
+    color_patterns = [
+        (body_color_pattern, settings['body background color']),
+        (header_color_pattern, settings['header background color']),
+        (header_text_color_pattern, settings['header text color']),
+        (header_hover_color_pattern, settings['header hover color']),
+        (body_link_color_pattern, settings['body link color']),
+        (body_hover_color_pattern, settings['body hover color'])]
+    
+    for p, s in color_patterns:
+        contents, n = p.subn(s, contents, 1)
+        if not n:
+            raise ValueError
+
+    with open(site_style_path, 'w', encoding='utf8') as file:
+        file.write(contents)
 
 
 def delete_old_html_files(old_html_paths: List[str],

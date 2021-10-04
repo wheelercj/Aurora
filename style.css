@@ -7,10 +7,10 @@ the site folder if it already exists there. */
     font-size: 40px;
 }
 html body {
-    background-color: #eeeeee00;
+    background-color: #fffafa;
 }
 header {
-    background-color: rgb(87, 86, 86);
+    background-color: #81b622;
     overflow: hidden;
 }
 nav {
@@ -19,8 +19,11 @@ nav {
     margin-right: 20%;
 }
 nav a {
-    color: skyblue;
+    color: #ecf87f;
     text-decoration: none;
+}
+nav a:hover {
+    color: #3d550c;
 }
 nav ul a {
     padding-left: 25px;
@@ -36,6 +39,12 @@ main {
     margin-bottom: 100px;
     margin-left: 20%;
     margin-right: 20%;
+}
+main a {
+    color: #59981a;
+}
+main a:hover {
+    color: #3d550c;
 }
 footer {
     margin: 50px;
