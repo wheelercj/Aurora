@@ -9,12 +9,15 @@ This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.
 Feature requests, contributions, etc. are welcome!
 
 ## Features
-* After setup (instructions below), you can add more ready-to-publish HTML files from your zettelkasten just by giving them the `#published` tag and running this program again. All internal links are converted to HTML links, regardless of whether they are markdown-style links or zettelkasten-style links.
-* The CSS and the HTML that wraps each page's content is available for customization. When you run the program the first time, it will create `style.css`, `header.html`, and `footer.html`. These three files can be customized and will be used each time the other site files are regenerated.
+* After setup (instructions below), you can add more pages to your site by simply adding the `#published` tag to your markdown files and running this program again.
+* All internal links are converted to HTML, regardless of whether they are markdown-style links or zettelkasten-style links.
+* A settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
+* Three index pages listing all the other pages are automatically populated: categorical, alphabetical, and chronological indexes.
+* Any broken internal links and internal links with outdated titles will be detected.
+* Any file attachments in the #published pages will be automatically copied to the site folder.
 * This program is 100% compatible with [Zettlr](https://www.zettlr.com/)'s default settings for internal links and file names, and may be compatible with other markdown editors as well.
 
 ## Current limitations
-* You can only choose one folder for the program to copy files from.
 * The only markdown files you can publish that have alphabetic characters in their file names are `index.md` and `about.md`. The names of all the other markdown files you want to publish must be 14-digit numbers followed by `.md`, e.g. `20201221140928.md`. The number represents the time of the file's creation in the YYYYMMDDhhmmss format.
 * Internal links are double square brackets surrounding a 14-digit number, followed by the file's title (its first header), e.g. `[[20201221140928]] this is the title`. The link's 14-digit number is the same as the linked file's name.
 
@@ -34,4 +37,4 @@ Feature requests, contributions, etc. are welcome!
 * Some markdown files in the site folder (outside the posts folder) may be overwritten, depending on their names.
 
 ### Detailed answer
-When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except when user settings change), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's posts folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the posts folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
+When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's posts folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the posts folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
