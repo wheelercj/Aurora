@@ -110,59 +110,57 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
 def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
     """Creates and displays the settings menu."""
     sg.theme('DarkAmber')
-    layout = [  
-        [sg.Text('site title: '),
-            sg.Input(key='site title',
-                default_text=settings['site title'])],
-        [sg.Text('site folder path: '),
-            sg.FolderBrowse(target='site path'),
-            sg.Input(key='site path',
-                default_text=settings['site path'])],
-        [sg.Text('zettelkasten folder path: '),
-            sg.FolderBrowse(target='zettelkasten path'),
-            sg.Input(key='zettelkasten path',
-                default_text=settings['zettelkasten path'])],
-        [sg.Text('copyright text: '),
-            sg.Input(key='copyright text',
-                default_text=settings['copyright text'])],
-        [sg.Text('body background color: '),
-            sg.ColorChooserButton('choose',
-                target='body background color'),
-            sg.Input(key='body background color',
-                default_text=settings['body background color'])],
-        [sg.Text('header background color: '),
-            sg.ColorChooserButton('choose',
-                target='header background color'),
-            sg.Input(key='header background color',
-                default_text=settings['header background color'])],
-        [sg.Text('header text color: '),
-            sg.ColorChooserButton('choose',
-                target='header text color'),
-            sg.Input(key='header text color',
-                default_text=settings['header text color'])],
-        [sg.Text('header hover color: '),
-            sg.ColorChooserButton('choose',
-                target='header hover color'),
-            sg.Input(key='header hover color',
-                default_text=settings['header hover color'])],
-        [sg.Text('body link color: '),
-            sg.ColorChooserButton('choose',
-                target='body link color'),
-            sg.Input(key='body link color',
-                default_text=settings['body link color'])],
-        [sg.Text('body hover color: '),
-            sg.ColorChooserButton('choose',
-                target='body hover color'),
-            sg.Input(key='body hover color',
-                default_text=settings['body hover color'])],
-        [sg.Checkbox('hide tags',
-            key='hide tags',
-            default=settings['hide tags'])],
-        [sg.Checkbox('hide dates in the chronological index',
-            key='hide chrono index dates',
-            default=settings['hide chrono index dates'])],
+    layout = [
+        create_text_chooser('site title', settings),
+        create_text_chooser('copyright text', settings),
+
+        create_folder_chooser('site path', settings),
+        create_folder_chooser('zettelkasten path', settings),
+
+        create_color_chooser('body background color', settings),
+        create_color_chooser('header background color', settings),
+        create_color_chooser('header text color', settings),
+        create_color_chooser('header hover color', settings),
+        create_color_chooser('body link color', settings),
+        create_color_chooser('body hover color', settings),
+
+        create_checkbox('hide tags', 'hide tags', settings),
+        create_checkbox('hide dates in the chronological index',
+                        'hide chrono index dates',
+                        settings),
+
         [sg.HorizontalSeparator()],
         [sg.Button('save'), sg.Button('cancel')] ]
 
     return sg.Window('zk-ssg settings', layout)
 
+
+def create_text_chooser(name: str, settings: dict) -> list:
+    """Creates PySimpleGUI elements for choosing text."""
+    return [sg.Text(name + ': '),
+        sg.Input(key=name,
+            default_text=settings[name])]
+
+
+def create_checkbox(title: str, key_name: str, settings: dict) -> list:
+    """Creates PySimpleGUI elements for a labelled checkbox."""
+    return [sg.Checkbox(title,
+        key=key_name,
+        default=settings[key_name])]
+
+    
+def create_folder_chooser(name: str, settings: dict) -> list:
+    """Creates PySimpleGUI elements for choosing a folder."""
+    return [sg.Text(name + ' (folder): '),
+        sg.FolderBrowse(target=name),
+        sg.Input(key=name,
+            default_text=settings[name])]
+
+
+def create_color_chooser(name: str, settings: dict) -> list:
+    """Creates PySimpleGUI elements for choosing a color."""
+    return [sg.Text(name + ': '),
+        sg.ColorChooserButton('choose',
+            target=name),
+        sg.Input(key=name,
+            default_text=settings[name])]
