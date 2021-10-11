@@ -1,3 +1,5 @@
+# Use `pyinstaller -wF generate_site.py` to create an .exe for Windows.
+
 # external imports
 import os
 import sys
