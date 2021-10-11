@@ -4,7 +4,7 @@ from typing import Dict, Union, Optional
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 
 
-def show_settings_window(settings: Optional[dict]) -> Dict[str, Union[str, bool]]:
+def show_settings_window(settings: Optional[dict] = None) -> Dict[str, Union[str, bool]]:
     """Runs the settings menu."""
     if not settings:
         settings = load_settings(fallback_option='default settings')
