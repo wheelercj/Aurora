@@ -1,5 +1,6 @@
 # external imports
 import os
+import sys
 import re
 import shutil
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
@@ -67,8 +68,11 @@ def generate_site(settings: Optional[dict]) -> None:
 
     this_dir, _ = os.path.split(__file__)
     if 3 > len({this_dir, site_path, zettelkasten_path}):
-        raise ValueError('The zettelkasten, the website\'s files, and this ' \
-            'program\'s files should probably be in different folders.')
+        error_message = 'Error: the zettelkasten, the website\'s files, ' \
+            'and this program\'s files should probably be in different ' \
+            'folders.'
+        sg.popup(error_message)
+        sys.exit(error_message)
 
     logging.info('Finding zettels that contain `#published`.')
     show_progress(2)
@@ -248,14 +252,14 @@ def revert_html(codeblock: str) -> str:
 
 
 def check_links(zettels: List[Zettel]) -> None:
-    """Raises ValueError if any zettel links are broken."""
+    """Shows a warning message if any zettel links are broken."""
     for zettel in zettels:
         with open(zettel.path, 'r', encoding='utf8') as file:
             contents = file.read()
         ids = patterns.zettel_link_id.findall(contents)
         for id in ids:
             if id not in (z.id for z in zettels):
-                raise ValueError(f'Zettel with ID {id} cannot be found' \
+                sg.popup(f'Warning: zettel with ID {id} cannot be found' \
                     f' but has been linked to in {zettel.title}')
 
 
@@ -532,12 +536,7 @@ def replace_pattern(uncompiled_pattern: str,
     chosen_pattern = re.compile(uncompiled_pattern)
     
     for file_path in file_paths:
-        with open(file_path, 'r', encoding=encoding) as file:
-            try:
-                contents = file.read()
-            except UnicodeDecodeError as e:
-                logging.error(f'UnicodeDecodeError: {e}')
-                raise e
+        contents = get_file_contents(file_path, encoding)
 
         # Temporarily remove any code blocks from contents.
         triple_codeblocks = patterns.triple_codeblock.findall(contents)
@@ -588,18 +587,30 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     published_tag_pattern = re.compile(r'(?<=\s)#published(?=\s)')
 
     for zettel_path in zettel_paths:
-        with open(zettel_path, 'r', encoding='utf8') as file:
-            try:
-                contents = file.read()
-            except UnicodeDecodeError:
-                logging.error(f'UnicodeDecodeError in file {zettel_path}')
-                raise
-
+        contents = get_file_contents(zettel_path, 'utf8')
         match = published_tag_pattern.search(contents)
         if match:
             zettels_to_publish.append(zettel_path)
 
     return zettels_to_publish
+
+
+def get_file_contents(absolute_path: str, encoding: str) -> str:
+    """Gets a file's contents.
+    
+    If UnicodeDecodeError is raised, this function will log and show an 
+    error message and make the program exit.
+    """
+    with open(absolute_path, 'r', encoding=encoding) as file:
+        try:
+            contents = file.read()
+        except UnicodeDecodeError as e:
+            logging.error(f'UnicodeDecodeError: {e}')
+            sg.popup('Error: one or more symbols cannot not be decoded ' \
+                f'as unicode in file {absolute_path}')
+            sys.exit(f'UnicodeDecodeError: {e}')
+        else:
+            return contents
 
 
 def edit_categorical_index_file(zettels: List[Zettel]) -> None:
@@ -614,7 +625,8 @@ def edit_categorical_index_file(zettels: List[Zettel]) -> None:
         index_contents = file.read()
     index_tags: List[str] = patterns.tags.findall(index_contents)
     if '#published' not in index_tags:
-        raise ValueError('index.md must be publishable.')
+        sg.popup('index.md must have the #published tag.')
+        sys.exit('index.md must have the #published tag.')
     index_tags.remove('#published')
     
     categories: Dict[str, str] = create_categorical_indexes(zettels,
