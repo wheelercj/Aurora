@@ -245,7 +245,8 @@ def revert_html(codeblock: str) -> str:
         ('&lt;', '<'),
         ('&gt;', '>'),
         ('&quot;', '"'),
-        ('&#39;', "'")]
+        ('&#39;', "'"),
+        ('&amp;', '&')]
     for replacement in replacements:
         codeblock = codeblock.replace(replacement[0], replacement[1])
     return codeblock
