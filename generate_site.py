@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.WARNING)  # https://docs.python.org/3/howto/lo
 # internal imports
 from settings import show_settings_window, load_settings
 from zettel import Zettel, get_zettel_by_file_name
-from patterns import patterns
+import patterns
 from convert_links import convert_links_from_zk_to_md
 
 
