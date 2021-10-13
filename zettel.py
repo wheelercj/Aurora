@@ -3,7 +3,7 @@ import os
 from typing import List, Optional
 
 # internal imports
-from patterns import patterns
+import patterns
 
 
 class Zettel:

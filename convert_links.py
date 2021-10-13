@@ -5,7 +5,7 @@ import logging
 
 # internal imports
 from zettel import Zettel, get_zettel_by_id
-from patterns import patterns
+import patterns
 
 
 md_linker_type = Callable[[Zettel, Zettel], str]
