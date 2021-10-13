@@ -45,6 +45,9 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     'copyright text' : str
         The copyright notice that will appear at the bottom of the 
         index page.
+    'site subfolder name' : str
+        The name of the folder within the site folder that most of the 
+        HTML pages will be placed in by default.
     'body background color' : str
         The color of the background of the site as a hex RGB string.
     'header background color' : str
@@ -96,6 +99,7 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         'site path': '',
         'site title': '',
         'copyright text': f'© {this_year}, your name',
+        'site subfolder name': 'pages',
         'body background color': '#fffafa',  # snow
         'header background color': '#81b622',  # lime green
         'header text color': '#ecf87f',  # yellow green
@@ -114,6 +118,7 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
     general_tab_layout = [
         create_text_chooser('site title', settings),
         create_text_chooser('copyright text', settings),
+        create_text_chooser('site subfolder name', settings),
 
         create_folder_chooser('site path', settings),
         create_folder_chooser('zettelkasten path', settings),
@@ -145,9 +150,14 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
 
 def create_text_chooser(name: str, settings: dict) -> list:
     """Creates PySimpleGUI elements for choosing text."""
-    return [sg.Text(name + ': '),
-        sg.Input(key=name,
-            default_text=settings[name])]
+    try:
+        default_text = settings[name]
+    except KeyError:
+        default_text = settings[name] = ''
+    finally:
+        return [sg.Text(name + ': '),
+                sg.Input(key=name,
+                default_text=default_text)]
 
 
 def create_checkbox(title: str, key_name: str, settings: dict) -> list:

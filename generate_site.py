@@ -84,17 +84,17 @@ def generate_site(settings: Optional[dict]) -> None:
     check_links(zettels)
     show_progress(10)
     
-    logging.info('Creating the posts folder if it doesn\'t already exist.')
-    site_posts_path = os.path.join(site_path, 'posts')
-    try: os.mkdir(site_posts_path)
+    logging.info('Creating the pages folder if it doesn\'t already exist.')
+    site_pages_path = os.path.join(site_path, settings['site subfolder name'])
+    try: os.mkdir(site_pages_path)
     except FileExistsError: pass
 
-    logging.info('Deleting all markdown files currently in the posts folder.')
-    delete_site_md_files(site_posts_path)
+    logging.info('Deleting all markdown files currently in the pages folder.')
+    delete_site_md_files(site_pages_path)
 
     logging.info(f'Copying the zettels to {site_path}')
     show_progress(12)
-    zettels = copy_zettels_to_site_folder(zettels, site_path, site_posts_path)
+    zettels = copy_zettels_to_site_folder(zettels, site_path, site_pages_path)
 
     logging.info('Creating index files of all published zettels.')
     show_progress(15)
@@ -103,12 +103,12 @@ def generate_site(settings: Optional[dict]) -> None:
     logging.info('Searching for any attachments that are linked to in ' \
         'the zettels.')
     show_progress(20)
-    n = copy_attachments(zettels, site_posts_path)
-    logging.info(f'Found {n} attachments and copied them to {site_posts_path}')
+    n = copy_attachments(zettels, site_pages_path)
+    logging.info(f'Found {n} attachments and copied them to {site_pages_path}')
 
-    reformat_zettels(zettels, settings['hide tags'])
+    reformat_zettels(zettels, settings)
     show_progress(25)
-    new_html_paths = regenerate_html_files(zettels, site_path, site_posts_path)
+    new_html_paths = regenerate_html_files(zettels, site_path, site_pages_path)
 
     fix_image_links(new_html_paths)
     show_progress(50)
@@ -266,52 +266,57 @@ def check_links(zettels: List[Zettel]) -> None:
                     f' but has been linked to in {zettel.title}')
 
 
-def reformat_zettels(zettels: List[Zettel], hide_tags: bool) -> None:
+def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
     """Convert any file links to absolute markdown-style HTML links
     
     Also, remove all tags from the files if hide_tags is True.
     """
     make_file_paths_absolute(zettels)
-    if (hide_tags):
+    if (settings['hide tags']):
         remove_all_tags(zettels)
     logging.info(f'Converting internal links from the zk to the md format.')
-    convert_links_from_zk_to_md(zettels, md_linker=create_markdown_link)
+    md_linker = md_linker_creator(settings)
+    convert_links_from_zk_to_md(zettels, md_linker=md_linker)
     redirect_links_from_md_to_html(zettels)
 
 
-def create_markdown_link(zettel: Zettel, linked_zettel: Zettel) -> str:
-    """Creates a markdown link from one zettel to another.
-    
-    Prefixes the links with `[§] `, and points some of the links to the
-    posts folder.
-    """
-    if linked_zettel.id.isnumeric() and not zettel.id.isnumeric():
-        markdown_link = f'[[§] {linked_zettel.title}]' \
-            f'(posts/{linked_zettel.id}.md)'
-    else:
-        markdown_link = f'[[§] {linked_zettel.title}]' \
-            f'({linked_zettel.id}.md)'
-    return markdown_link
+def md_linker_creator(settings: dict) -> str:
+    """Creates an md linker creator for zettels in multiple folders."""
+    def create_markdown_link(zettel: Zettel, linked_zettel: Zettel) -> str:
+        """Creates a markdown link from one zettel to another.
+        
+        Prefixes the links with `[§] `, and points some of the links to 
+        the pages folder.
+        """
+        if linked_zettel.id.isnumeric() and not zettel.id.isnumeric():
+            markdown_link = f'[[§] {linked_zettel.title}]' \
+                f'({settings["site subfolder name"]}/{linked_zettel.id}.md)'
+        else:
+            markdown_link = f'[[§] {linked_zettel.title}]' \
+                f'({linked_zettel.id}.md)'
+        return markdown_link
+
+    return create_markdown_link
 
 
 def regenerate_html_files(zettels: List[Zettel],
                           site_path: str,
-                          site_posts_path: str) -> List[str]:
+                          site_pages_path: str) -> List[str]:
     """Creates new and deletes old HTML files
     
     May overwrite some HTML files. Old HTML files that were listed in 
     ssg-ignore.txt are saved and not changed at all.
     """
     old_html_paths = get_file_paths(site_path, '.html') \
-        + get_file_paths(site_posts_path, '.html')
+        + get_file_paths(site_pages_path, '.html')
     logging.info('Creating html files from the md files.')
     new_html_paths = create_html_files(zettels)
     all_html_paths = get_file_paths(site_path, '.html') \
-        + get_file_paths(site_posts_path, '.html')
+        + get_file_paths(site_pages_path, '.html')
 
     logging.info('Deleting any HTML files that were not just generated and ' \
         'were not listed in ssg-ignore.txt.')
-    delete_old_html_files(old_html_paths, all_html_paths, site_posts_path)
+    delete_old_html_files(old_html_paths, all_html_paths, site_pages_path)
 
     return new_html_paths
 
@@ -395,12 +400,12 @@ def make_file_paths_absolute(zettels: List[Zettel]) -> None:
     logging.info(f'Converted {n} absolute file paths to relative file paths.')
 
 
-def copy_attachments(zettels: List[Zettel], site_posts_path: str) -> int:
+def copy_attachments(zettels: List[Zettel], site_pages_path: str) -> int:
     """Copies files linked to in the zettels into the site folder."""
     attachment_paths = get_attachment_paths(zettels)
     for path in attachment_paths:
         try:
-            shutil.copy(path, site_posts_path)
+            shutil.copy(path, site_pages_path)
         except shutil.SameFileError:
             _, file_name = os.path.split(path)
             logging.info(f'  Did not copy {file_name} because it is already ' \
@@ -411,14 +416,14 @@ def copy_attachments(zettels: List[Zettel], site_posts_path: str) -> int:
 
 def copy_zettels_to_site_folder(zettels: List[Zettel],
                                 site_path: str,
-                                site_posts_path: str) -> List[Zettel]:
+                                site_pages_path: str) -> List[Zettel]:
     """Copies zettels to the site folder
     
     Returns the zettels with their new paths.
     """
     for i, zettel in enumerate(zettels):
         if zettel.id.isnumeric():
-            new_path = shutil.copy(zettel.path, site_posts_path)
+            new_path = shutil.copy(zettel.path, site_pages_path)
             zettels[i].path = new_path
         else:
             new_path = shutil.copy(zettel.path, site_path)
@@ -721,9 +726,9 @@ def create_chronological_index(zettels: List[Zettel],
     return zettel_index
 
 
-def delete_site_md_files(site_posts_path: str) -> None:
+def delete_site_md_files(site_pages_path: str) -> None:
     """Permanently deletes all the markdown files in the site folder."""
-    md_paths = get_file_paths(site_posts_path, '.md')
+    md_paths = get_file_paths(site_pages_path, '.md')
     for path in md_paths:
         os.remove(path)
 
@@ -809,7 +814,7 @@ def update_css(site_style_path: str, settings: dict) -> None:
 
 def delete_old_html_files(old_html_paths: List[str],
                           all_html_paths: List[str],
-                          site_posts_path: str) -> None:
+                          site_pages_path: str) -> None:
     '''Deletes HTML files that are not being generated or saved
 
     old_html_paths is the paths to HTML files present before the
@@ -817,7 +822,7 @@ def delete_old_html_files(old_html_paths: List[str],
     ones present after. A file can be marked to be saved by putting its
     absolute path on a new line in ssg-ignore.txt.
     '''
-    file_name = os.path.join(site_posts_path, 'ssg-ignore.txt')
+    file_name = os.path.join(site_pages_path, 'ssg-ignore.txt')
     try:
         with open(file_name, 'r', encoding='utf8') as file:
             ignored_html_paths = file.read().split('\n')
