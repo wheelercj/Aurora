@@ -5,7 +5,6 @@ import os
 import sys
 import re
 import shutil
-from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
@@ -356,31 +355,9 @@ def create_html_files(zettels: List[Zettel]) -> List[str]:
     """
     new_html_file_paths = []
     for zettel in zettels:
-        new_html_file_path = create_html_file(zettel)
+        new_html_file_path = zettel.create_html_file()
         new_html_file_paths.append(new_html_file_path)
     return new_html_file_paths
-
-
-def create_html_file(zettel: Zettel) -> str:
-    """Creates one HTML file from a markdown file in the same folder
-    
-    Overwrites an HTML if it happens to have the same name. Returns the 
-    new HTML file's path.
-    """
-    with open(zettel.path, 'r', encoding='utf8') as file:
-        md_text = file.read()
-    html_text = HTMLConverter(md_text)
-    html_path = create_html_path(zettel.path)
-    with open(html_path, 'w', encoding='utf8') as file:
-        file.write(html_text)
-    return html_path
-
-
-def create_html_path(zettel_path: str) -> str:
-    """Creates an HTML file path from a corresponding md file path."""
-    file_path_and_name, _ = os.path.splitext(zettel_path)
-    new_html_path = file_path_and_name + '.html'
-    return new_html_path
 
 
 def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:

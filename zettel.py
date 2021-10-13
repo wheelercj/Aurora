@@ -1,6 +1,7 @@
 # external imports
 import os
 from typing import List, Optional
+from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 
 # internal imports
 import patterns
@@ -57,6 +58,28 @@ class Zettel:
             contents = file.read()
         tags: List[str] = patterns.tags.findall(contents)
         return tags
+
+
+    def create_html_file(self) -> str:
+        """Creates one HTML file from a markdown file in the same folder
+        
+        Overwrites an HTML file if it happens to have the same name. 
+        Returns the new HTML file's path.
+        """
+        with open(self.path, 'r', encoding='utf8') as file:
+            md_text = file.read()
+        html_text = HTMLConverter(md_text)
+        html_path = self.create_html_path()
+        with open(html_path, 'w', encoding='utf8') as file:
+            file.write(html_text)
+        return html_path
+
+
+    def create_html_path(self) -> str:
+        """Creates an HTML file path from a corresponding md file path."""
+        file_path_and_name, _ = os.path.splitext(self.path)
+        new_html_path = file_path_and_name + '.html'
+        return new_html_path
 
 
 def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
