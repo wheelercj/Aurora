@@ -110,25 +110,33 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
 def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
     """Creates and displays the settings menu."""
     sg.theme('DarkAmber')
-    layout = [
+
+    general_tab_layout = [
         create_text_chooser('site title', settings),
         create_text_chooser('copyright text', settings),
 
         create_folder_chooser('site path', settings),
         create_folder_chooser('zettelkasten path', settings),
 
+        create_checkbox('hide tags', 'hide tags', settings),
+        create_checkbox('hide dates in the chronological index',
+                        'hide chrono index dates',
+                        settings),
+    ]
+
+    color_tab_layout = [
         create_color_chooser('body background color', settings),
         create_color_chooser('header background color', settings),
         create_color_chooser('header text color', settings),
         create_color_chooser('header hover color', settings),
         create_color_chooser('body link color', settings),
         create_color_chooser('body hover color', settings),
+    ]
 
-        create_checkbox('hide tags', 'hide tags', settings),
-        create_checkbox('hide dates in the chronological index',
-                        'hide chrono index dates',
-                        settings),
-
+    layout = [
+        [sg.TabGroup([[
+            sg.Tab('general', general_tab_layout),
+            sg.Tab('color', color_tab_layout)]])],
         [sg.HorizontalSeparator()],
         [sg.Button('save'), sg.Button('cancel')] ]
 
