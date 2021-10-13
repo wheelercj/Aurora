@@ -13,7 +13,8 @@ Feature requests, contributions, etc. are welcome!
 * All internal links are converted to HTML, regardless of whether they are markdown-style links or zettelkasten-style links.
 * A settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
 * Three index pages listing all the other pages are automatically populated: categorical, alphabetical, and chronological indexes.
-* Any broken internal links and internal links with outdated titles will be detected.
+* Any broken zettelkasten-style links will be detected.
+* Any zettelkasten-style links with outdated titles will be detected.
 * Any file attachments in the #published pages will be automatically copied to the site folder.
 * This program is 100% compatible with [Zettlr](https://www.zettlr.com/)'s default settings for internal links and file names, and may be compatible with other markdown editors as well.
 
