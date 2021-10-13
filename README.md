@@ -4,7 +4,7 @@ This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.
 
 [Here's a site that was built with this program.](https://wheelercj.github.io/notes/)
 
-[Comparisons to other methods for publishing a zettelkasten.](https://wheelercj.github.io/notes/posts/20210510123255.html)
+[Comparisons to other methods for publishing a zettelkasten.](https://wheelercj.github.io/notes/pages/20210510123255.html)
 
 Feature requests, contributions, etc. are welcome!
 
@@ -32,9 +32,9 @@ Feature requests, contributions, etc. are welcome!
 ### Short answer
 * **_Nothing_** in the zettelkasten folder is changed in any way.
 * Site files with the same name as zettelkasten files get overwritten.
-* All markdown files in the site folder's posts folder that do not get overwritten get deleted.
+* All markdown files in the site folder's pages folder that do not get overwritten get deleted.
 * The program will ask to delete HTML files that were not overwritten.
-* Some markdown files in the site folder (outside the posts folder) may be overwritten, depending on their names.
+* Some markdown files in the site folder (outside the pages folder) may be overwritten, depending on their names.
 
 ### Detailed answer
-When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's posts folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the posts folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
+When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's pages folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the pages folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
