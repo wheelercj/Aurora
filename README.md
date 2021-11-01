@@ -11,6 +11,7 @@ Feature requests, contributions, etc. are welcome!
 ## Features
 * After setup (instructions below), you can add more pages to your site by simply adding the `#published` tag to your markdown files and running this program again.
 * All internal links are converted to HTML, regardless of whether they are markdown-style links or zettelkasten-style links.
+* If you have zettelkasten-style links, titles that are mixed into the rest of the page will still be converted correctly. For example, if you have a markdown file named `20201221140928.md` and titled `Positive Health`, and one of your other pages contains the text `also see [[20201221140928]] Positive Health for more details`, that will become `also see [Positive Health](20201221140928.md) for more details` (and then that will be converted to HTML). This program can figure out the correct format even though there is no indication of where the title begins and ends.
 * A settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
 * Three index pages listing all the other pages are automatically populated: categorical, alphabetical, and chronological indexes.
 * Any broken zettelkasten-style links will be detected.
