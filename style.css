@@ -52,6 +52,9 @@ footer {
 h1 {
     padding-bottom: 3%;
 }
+img {
+    width: 70%;
+}
 code {
     background-color: rgb(230, 230, 230);
     padding: 3px;
