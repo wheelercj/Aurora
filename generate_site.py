@@ -687,7 +687,7 @@ def create_categorical_indexes(
 
     for zettel in zettels:
         if zettel not in linked_zettels and zettel.title not in ("index", "about"):
-            logging.warning(" zettel not listed in index.md: `{zettel.title}`")
+            logging.warning(f" zettel not listed in index.md: `{zettel.title}`")
 
     return categories
 
