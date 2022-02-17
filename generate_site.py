@@ -214,9 +214,10 @@ def syntax_highlight_code(html_paths: List[str]) -> None:
                         cb_contents_match, lexer, formatter, contents
                     )
 
-            file.truncate(0)
-            file.seek(0)
-            file.write(contents)
+            if codeblocks:
+                file.truncate(0)
+                file.seek(0)
+                file.write(contents)
 
 
 def highlight_codeblock(
@@ -239,11 +240,11 @@ def get_lexer(language: str) -> Any:
 
     Returns None if a valid language is not found.
     """
-    lexer = None
-    if language == "lang-cpp":
-        lexer = lexers.get_lexer_by_name("c++")
-
-    return lexer
+    if language.startswith("language-"):
+        language = language[9:]
+    if language == "cpp":
+        language == "c++"
+    return lexers.get_lexer_by_name(language)
 
 
 def revert_html(codeblock: str) -> str:
