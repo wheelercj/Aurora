@@ -232,6 +232,12 @@ def highlight_codeblock(
         plain_codeblock = revert_html(cb_contents_match[0])
         result = highlight(plain_codeblock, lexer, formatter)
         contents = contents.replace(cb_contents_match[0], result, 1)
+        # Remove empty line at the end of the code block.
+        contents = contents.replace(
+            "</span>\n</pre></div>\n</code></pre>\n", "</span></pre></div></code></pre>"
+        )
+        contents = contents.replace('<div class="source"><pre>', '<div class="source">')
+        contents = contents.replace("</pre></div>", "</div>")
     return contents
 
 
