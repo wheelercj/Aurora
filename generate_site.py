@@ -351,13 +351,15 @@ def convert_attachment_links(all_html_paths: List[str]) -> int:
 def fix_image_links(all_html_paths: List[str]) -> None:
     """Fixes any image links that were not converted correctly
 
-    `.png" src="/images/` must be changed to `.png" src="images/`.
+    For example, `.png" src="/images/` must be changed to `.png" src="images/`.
     """
     # This function might not be needed anymore. I originally wrote this
     # because I was using gh_md_to_html, which didn't convert some
     # things correctly (including image links).
-    incorrect_link_pattern = r"\.png\" src=\".+images/"
-    n = replace_pattern(incorrect_link_pattern, '.png" src="images/', all_html_paths)
+    incorrect_link_pattern1 = r"\.png\" src=\".+images/"
+    n = replace_pattern(incorrect_link_pattern1, '.png" src="images/', all_html_paths)
+    incorrect_link_pattern2 = r"\.jpg\" src=\".+images/"
+    n += replace_pattern(incorrect_link_pattern2, '.jpg" src="images/', all_html_paths)
     logging.info(f"Fixed the src path of {n} image links.")
 
 
@@ -387,7 +389,7 @@ def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
 
 def make_file_paths_absolute(zettels: List[Zettel]) -> None:
     """Converts all relative file paths to absolute file paths."""
-    attachment_link_pattern = r"(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png))(?=\))"
+    attachment_link_pattern = r"(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png|jpg))(?=\))"
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(attachment_link_pattern, r"\1", zettel_paths)
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
@@ -745,7 +747,7 @@ def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
     all_attachment_paths = []
     file_attachment_groups: List[Tuple[str]] = []
 
-    attachment_pattern = re.compile(r"(?<=]\()(.+\S\.(pdf|png))(?=\))")
+    attachment_pattern = re.compile(r"(?<=]\()(.+\S\.(pdf|png|jpg))(?=\))")
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
