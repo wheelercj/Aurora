@@ -115,7 +115,6 @@ def generate_site(settings: Optional[dict]) -> None:
     show_progress(25)
     new_html_paths = regenerate_html_files(zettels, site_path, site_pages_path)
 
-    fix_image_links(new_html_paths)
     show_progress(50)
     n = convert_attachment_links(new_html_paths)
     logging.info(f"Converted {n} attachment links from the md to the html format.")
@@ -353,21 +352,6 @@ def convert_attachment_links(all_html_paths: List[str]) -> int:
     md_link_pattern = r"\[(.+)]\((.+)\)"
     n = replace_pattern(md_link_pattern, r'<a href="\2">\1</a>', all_html_paths)
     return n
-
-
-def fix_image_links(all_html_paths: List[str]) -> None:
-    """Fixes any image links that were not converted correctly
-
-    For example, `.png" src="/images/` must be changed to `.png" src="images/`.
-    """
-    # This function might not be needed anymore. I originally wrote this
-    # because I was using gh_md_to_html, which didn't convert some
-    # things correctly (including image links).
-    incorrect_link_pattern1 = r"\.png\" src=\".+images/"
-    n = replace_pattern(incorrect_link_pattern1, '.png" src="images/', all_html_paths)
-    incorrect_link_pattern2 = r"\.jpg\" src=\".+images/"
-    n += replace_pattern(incorrect_link_pattern2, '.jpg" src="images/', all_html_paths)
-    logging.info(f"Fixed the src path of {n} image links.")
 
 
 def create_html_files(zettels: List[Zettel]) -> List[str]:
