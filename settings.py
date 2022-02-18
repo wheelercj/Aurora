@@ -7,7 +7,14 @@ import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 def show_settings_window(
     settings: Optional[dict] = None,
 ) -> Dict[str, Union[str, bool]]:
-    """Runs the settings menu and returns the settings."""
+    """Runs the settings menu and returns the settings.
+
+    Parameters
+    ----------
+    settings : dict, optional
+        The settings to use. If not provided, the default settings will be
+        used.
+    """
     if not settings:
         settings = load_settings(fallback_option="default settings")
     settings_are_valid = False
@@ -27,10 +34,10 @@ def show_settings_window(
 def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     """Gets the user's settings.
 
-    The settings are retrieved from settings.json if the file exists and
-    is not empty. Otherwise, they are retrieved directly from the user
-    via a settings menu or from default settings in the code depending
-    on the chosen fallback option.
+    The settings are retrieved from settings.json if the file exists and is not
+    empty. Otherwise, they are retrieved directly from the user via a settings
+    menu or from default settings in the code depending on the chosen fallback
+    option.
 
     Parameters
     ----------
@@ -51,11 +58,10 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     'site title' : str
         The title that will appear at the top of the site.
     'copyright text' : str
-        The copyright notice that will appear at the bottom of the
-        index page.
+        The copyright notice that will appear at the bottom of the index page.
     'site subfolder name' : str
-        The name of the folder within the site folder that most of the
-        HTML pages will be placed in by default.
+        The name of the folder within the site folder that most of the HTML
+        pages will be placed in by default.
     'body background color' : str
         The color of the background of the site as a hex RGB string.
     'header background color' : str
@@ -63,19 +69,19 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     'header text color' : str
         The color of the text in the header as a hex RGB string.
     'header hover color' : str
-        The color of links in the header when they are hovered over, as
-        a hex RGB string.
+        The color of links in the header when they are hovered over, as a hex
+        RGB string.
     'body link color' : str
         The color of links in the body, as a hex RGB string.
     'body hover color' : str
-        The color of links in the body when they are hovered over, as
-        a hex RGB string.
+        The color of links in the body when they are hovered over, as a hex RGB
+        string.
     'hide tags' : bool
-        If true, tags will be removed from the copied zettels when
-        generating the site.
+        If true, tags will be removed from the copied zettels when generating
+        the site.
     'hide chrono index dates' : bool
-        If true, file creation dates will not be shown in the
-        chronological index.
+        If true, file creation dates will not be shown in the chronological
+        index.
     """
     try:
         with open("settings.json", "r", encoding="utf8") as file:
@@ -94,7 +100,13 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
 
 
 def save_settings(settings: dict) -> None:
-    """Saves the user's settings to settings.json."""
+    """Saves the user's settings to settings.json.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to save.
+    """
     with open("settings.json", "w", encoding="utf8") as file:
         json.dump(settings, file)
 
@@ -120,7 +132,13 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
 
 
 def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
-    """Creates and displays the settings menu."""
+    """Creates and displays the settings menu.
+
+    Parameters
+    ----------
+    settings : dict, optional
+        The settings to use.
+    """
     sg.theme("DarkAmber")
 
     general_tab_layout = [
@@ -163,7 +181,16 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
 
 
 def create_text_chooser(name: str, settings: dict) -> list:
-    """Creates PySimpleGUI elements for choosing text."""
+    """Creates PySimpleGUI elements for choosing text.
+
+    Parameters
+    ----------
+    name : str
+        The name of the setting and the input element, and the text that
+        appears next to that element.
+    settings : dict
+        The settings to use.
+    """
     try:
         default_text = settings[name]
     except KeyError:
@@ -173,12 +200,31 @@ def create_text_chooser(name: str, settings: dict) -> list:
 
 
 def create_checkbox(title: str, key_name: str, settings: dict) -> list:
-    """Creates PySimpleGUI elements for a labelled checkbox."""
+    """Creates PySimpleGUI elements for a labelled checkbox.
+
+    Parameters
+    ----------
+    title : str
+        The text that appears next to the checkbox.
+    key_name : str
+        The name of the setting and the key of the checkbox element.
+    settings : dict
+        The settings to use.
+    """
     return [sg.Checkbox(title, key=key_name, default=settings[key_name])]
 
 
 def create_folder_chooser(name: str, settings: dict) -> list:
-    """Creates PySimpleGUI elements for choosing a folder."""
+    """Creates PySimpleGUI elements for choosing a folder.
+
+    Parameters
+    ----------
+    name : str
+        The name of the setting, the key of the input element, the target of
+        the folder browse button element, and the text that button.
+    settings : dict
+        The settings to use.
+    """
     return [
         sg.Text(name + " (folder): "),
         sg.FolderBrowse(target=name),
@@ -187,7 +233,17 @@ def create_folder_chooser(name: str, settings: dict) -> list:
 
 
 def create_color_chooser(name: str, settings: dict) -> list:
-    """Creates PySimpleGUI elements for choosing a color."""
+    """Creates PySimpleGUI elements for choosing a color.
+
+    Parameters
+    ----------
+    name : str
+        The name of the setting, the key of the input element, the target of
+        the color chooser button element, and the text that appears next to
+        the button.
+    settings : dict
+        The settings to use.
+    """
     return [
         sg.Text(name + ": "),
         sg.ColorChooserButton("choose", target=name),
@@ -200,6 +256,11 @@ def filter_items(settings: dict) -> dict:
 
     Removes all items with keys that are not strings or that start with
     an uppercase letter.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to filter.
     """
     new_settings = dict()
     for key, value in settings.items():
@@ -210,7 +271,13 @@ def filter_items(settings: dict) -> dict:
 
 
 def validate_settings(settings: dict) -> bool:
-    """Detects any empty strings in the settings."""
+    """Detects any empty strings in the settings.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings to validate.
+    """
     for value in settings.values():
         if isinstance(value, str):
             if not value:

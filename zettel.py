@@ -76,14 +76,30 @@ class Zettel:
 
 
 def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
-    """Gets a zettel by its zettel ID."""
+    """Gets a zettel by its zettel ID.
+    
+    Parameters
+    ----------
+    link_id : str
+        The zettel ID.
+    zettels : List[Zettel]
+        The list of zettels to search in.
+    """
     for zettel in zettels:
         if zettel.id == link_id:
             return zettel
 
 
 def get_zettel_by_file_name(file_name: str, zettels: List[Zettel]) -> Optional[Zettel]:
-    """Gets a zettel by its file name, not including the extension."""
+    """Gets a zettel by its file name, not including the extension.
+    
+    Parameters
+    ----------
+    file_name : str
+        The name of the zettel file, not including the extension.
+    zettels : List[Zettel]
+        The list of zettels to search in.
+    """
     for zettel in zettels:
         if file_name + ".md" == zettel.file_name:
             return zettel

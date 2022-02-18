@@ -93,7 +93,15 @@ def convert_zettel_links_from_zk_to_md(
 
 
 def save_zettel(contents: str, zettel: Zettel) -> None:
-    """Overwrites a zettel with new contents."""
+    """Overwrites a zettel with new contents.
+
+    Parameters
+    ----------
+    contents : str
+        The new contents of the zettel.
+    zettel : Zettel
+        The zettel to overwrite.
+    """
     with open(zettel.path, "w", encoding="utf8") as file:
         file.write(contents)
 
@@ -102,6 +110,11 @@ def get_contents(zettel: Zettel) -> Optional[str]:
     """Gets the contents of a zettel.
 
     Logs a warning if attempting to open the zettel raises OSError.
+
+    Parameters
+    ----------
+    zettel : Zettel
+        The zettel to get the contents of.
 
     Returns
     -------
