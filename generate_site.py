@@ -508,7 +508,7 @@ def make_file_paths_absolute(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The zettels to change the paths in.
     """
-    attachment_link_pattern = r"(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png|jpg))(?=\))"
+    attachment_link_pattern = r"(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png|jpg|jpeg))(?=\))"
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(attachment_link_pattern, r"\1", zettel_paths)
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
@@ -1022,15 +1022,14 @@ def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
         The zettels to get the file attachment links of.
     """
     all_attachment_paths = []
-    file_attachment_groups: List[Tuple[str]] = []
 
-    attachment_pattern = re.compile(r"(?<=]\()(.+\S\.(pdf|png|jpg))(?=\))")
+    attachment_pattern = re.compile(r"(?<=]\()(.+\S\.(pdf|png|jpg|jpeg))(?=\))")
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
         file_attachment_groups: List[Tuple[str]] = attachment_pattern.findall(contents)
         for group in file_attachment_groups:
-            if not group[0].startswith("http"):
+            if os.path.exists(group[0]):
                 all_attachment_paths.append(group[0])
 
     return all_attachment_paths
