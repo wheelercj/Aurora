@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 from typing import Dict, Union, Optional
+import sys
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 
 
@@ -21,11 +22,13 @@ def show_settings_window(
     window = create_settings_window(settings)
     while not settings_are_valid:
         event, new_settings = window.read()
+        if event == sg.WIN_CLOSED:
+            sys.exit(0)
         new_settings = filter_items(new_settings)
         settings_are_valid = validate_settings(new_settings)
         if not settings_are_valid:
             sg.popup("Each setting must be given a value.")
-    if event != sg.WIN_CLOSED and event != "cancel":
+    if event != "cancel":
         save_settings(new_settings)
     window.close()
     return new_settings
