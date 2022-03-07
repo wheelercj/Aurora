@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from typing import Dict, Union, Optional
 import sys
+import os
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 
 
@@ -87,6 +88,7 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
         index.
     """
     try:
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
         with open("settings.json", "r", encoding="utf8") as file:
             settings = json.load(file)
         if not settings:
