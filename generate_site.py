@@ -125,7 +125,7 @@ def generate_site(settings: Optional[dict]) -> None:
 
     logging.info("Creating index files of all published zettels.")
     show_progress(15)
-    create_index_files(zettels, site_path, settings["hide chrono index dates"])
+    create_md_index_files(zettels, site_path, settings["hide chrono index dates"])
 
     logging.info("Searching for any attachments that are linked to in the zettels.")
     show_progress(20)
@@ -145,10 +145,10 @@ def generate_site(settings: Optional[dict]) -> None:
     syntax_highlight_code(new_html_paths)
 
     logging.info("Inserting the site header, footer, etc. into each file.")
-    append_index_links(site_path)
     append_copyright_notice(site_path, settings["copyright text"])
     copy_template_html_files(site_path)
     wrap_template_html(site_path, new_html_paths, settings["site title"])
+    insert_all_index_links(site_path)
     show_progress(85)
 
     logging.info("Checking for style.css.")
@@ -181,8 +181,11 @@ def append_copyright_notice(site_path: str, copyright_text: str) -> None:
     )
 
 
-def append_index_links(site_path: str) -> None:
-    """Appends links to the other index pages in each HTML index file.
+def insert_all_index_links(site_path: str) -> None:
+    """Inserts links to index files into each of the other HTML index files.
+
+    This function must not be called until after the template HTML has been
+    wrapped around each HTML file.
 
     Parameters
     ----------
@@ -190,29 +193,31 @@ def append_index_links(site_path: str) -> None:
         The path to the site's folder.
     """
     index_path = os.path.join(site_path, "index.html")
-    append_text(
-        index_path,
-        "<hr /><p>sort by: "
-        '<a href="alphabetical-index.html">α</a> | '
-        '<a href="chronological-index.html">🕑</a></p>',
-    )
+    insert_index_links(index_path, '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="chronological-index.html">🕑</a></p>')
     index_path = os.path.join(site_path, "alphabetical-index.html")
-    append_text(
-        index_path,
-        "<hr /><p>sort by: "
-        '<a href="index.html">💡</a> | '
-        '<a href="chronological-index.html">🕑</a></p>',
-    )
+    insert_index_links(index_path, '<p>sort by: <a href="index.html">💡</a> <a href="chronological-index.html">🕑</a></p>')
     index_path = os.path.join(site_path, "chronological-index.html")
-    append_text(
-        index_path,
-        "<hr /><p>sort by: "
-        '<a href="alphabetical-index.html">α</a> | '
-        '<a href="index.html">💡</a>',
-    )
+    insert_index_links(index_path, '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="index.html">💡</a>')
 
 
-def create_index_files(
+def insert_index_links(file_path: str, links_to_insert: str) -> None:
+    """Inserts links to index files into one HTML index file.
+    
+    Parameters
+    ----------
+    file_path : str
+        The absolute path to the HTML index file.
+    links_to_insert : str
+        The links to insert into the HTML index file.
+    """
+    with open(file_path, 'r+', encoding='utf8') as file:
+        file_contents = file.read()
+        file_contents = file_contents.replace('<main>', f'<main>\n{links_to_insert}')
+        file.seek(0)
+        file.write(file_contents)
+
+
+def create_md_index_files(
     zettels: List[Zettel], site_path: str, hide_chrono_index_dates: bool
 ) -> None:
     """Creates markdown files that list all the published zettels
