@@ -372,7 +372,7 @@ def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
     settings : dict
         The settings to use.
     """
-    make_file_paths_absolute(zettels)
+    make_file_paths_relative(zettels)
     if settings["hide tags"]:
         remove_all_tags(zettels)
     logging.info(f"Converting internal links from the zk to the md format.")
@@ -500,17 +500,17 @@ def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
     )
 
 
-def make_file_paths_absolute(zettels: List[Zettel]) -> None:
-    """Converts all relative file paths to absolute file paths.
+def make_file_paths_relative(zettels: List[Zettel]) -> None:
+    """Converts all absolute file paths to relative file paths.
 
     Parameters
     ----------
     zettels : List[Zettel]
         The zettels to change the paths in.
     """
-    attachment_link_pattern = r"(?<=]\()C:[^\n]*?([^\\/\n]+\.(pdf|png|jpg|jpeg))(?=\))"
+    absolute_attachment_link_pattern = r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.(pdf|png|jpg|jpeg))(?=\))"
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(attachment_link_pattern, r"\1", zettel_paths)
+    n = replace_pattern(absolute_attachment_link_pattern, r"\1", zettel_paths)
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
 
 
