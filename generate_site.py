@@ -48,15 +48,15 @@ def create_main_menu_window() -> sg.Window:
     return sg.Window("zk-ssg", layout)
 
 
-def respond_to_main_menu_event(event: str, settings: Optional[dict]) -> Optional[dict]:
+def respond_to_main_menu_event(event: str, settings: dict = None) -> Optional[dict]:
     """Handles main menu events.
 
     Parameters
     ----------
     event : str
         The event that was triggered.
-    settings : Optional[dict]
-        The settings dictionary.
+    settings : dict, None
+        The settings dictionary. If not provided, the settings will be loaded.
     """
     if event == "generate site":
         generate_site(settings)
@@ -76,13 +76,14 @@ def show_progress(n: int) -> None:
     sg.one_line_progress_meter("generating the site", n, 100, "progress meter")
 
 
-def generate_site(settings: Optional[dict]) -> None:
+def generate_site(settings: dict = None) -> None:
     """Generates all the site's files.
 
     Parameters
     ----------
-    settings : Optional[dict]
-        The settings dictionary.
+    settings : dict, None
+        The settings dictionary. If not provided, the settings will be loaded
+        from the settings.json file.
     """
     show_progress(0)
     logging.info("Getting the application settings.")
