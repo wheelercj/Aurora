@@ -193,16 +193,25 @@ def insert_all_index_links(site_path: str) -> None:
         The path to the site's folder.
     """
     index_path = os.path.join(site_path, "index.html")
-    insert_index_links(index_path, '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="chronological-index.html">🕑</a></p>')
+    insert_index_links(
+        index_path,
+        '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="chronological-index.html">🕑</a></p>',
+    )
     index_path = os.path.join(site_path, "alphabetical-index.html")
-    insert_index_links(index_path, '<p>sort by: <a href="index.html">💡</a> <a href="chronological-index.html">🕑</a></p>')
+    insert_index_links(
+        index_path,
+        '<p>sort by: <a href="index.html">💡</a> <a href="chronological-index.html">🕑</a></p>',
+    )
     index_path = os.path.join(site_path, "chronological-index.html")
-    insert_index_links(index_path, '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="index.html">💡</a>')
+    insert_index_links(
+        index_path,
+        '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="index.html">💡</a>',
+    )
 
 
 def insert_index_links(file_path: str, links_to_insert: str) -> None:
     """Inserts links to index files into one HTML index file.
-    
+
     Parameters
     ----------
     file_path : str
@@ -210,9 +219,9 @@ def insert_index_links(file_path: str, links_to_insert: str) -> None:
     links_to_insert : str
         The links to insert into the HTML index file.
     """
-    with open(file_path, 'r+', encoding='utf8') as file:
+    with open(file_path, "r+", encoding="utf8") as file:
         file_contents = file.read()
-        file_contents = file_contents.replace('<main>', f'<main>\n{links_to_insert}')
+        file_contents = file_contents.replace("<main>", f"<main>\n{links_to_insert}")
         file.seek(0)
         file.write(file_contents)
 
@@ -921,19 +930,24 @@ def create_categorical_indexes(
     index_tags : List[str]
         The tags to categorize.
     """
-    categories = dict()
-    linked_zettels: List[Zettel] = []
+    categories: Dict[list] = dict()
+    unlinked_zettels: List[Zettel] = list(zettels)
     for index_tag in index_tags:
-        categories[index_tag] = ""
+        categories[index_tag] = []
         for zettel in zettels:
             if zettel.id.isnumeric():
                 if index_tag in zettel.tags:
-                    categories[index_tag] += "* " + zettel.link + "\n"
-                    linked_zettels.append(zettel)
+                    categories[index_tag].append("* " + zettel.link)
+                    unlinked_zettels.remove(zettel)
 
-    for zettel in zettels:
-        if zettel not in linked_zettels and zettel.title not in ("index", "about"):
-            logging.warning(f" zettel not listed in index.md: `{zettel.title}`")
+    for zettel in unlinked_zettels:
+        if zettel.title not in ("index", "about"):
+            if "#other" not in categories:
+                categories["#other"] = []
+            categories["#other"].append("* " + zettel.link)
+
+    for key, value in categories.items():
+        categories[key] = "\n".join(value)
 
     return categories
 
