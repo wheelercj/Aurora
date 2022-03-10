@@ -523,9 +523,8 @@ def make_file_paths_relative(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The zettels to change the paths in.
     """
-    absolute_attachment_link_pattern = r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.(pdf|png|jpg|jpeg))(?=\))"
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(absolute_attachment_link_pattern, r"\1", zettel_paths)
+    n = replace_pattern(patterns.absolute_attachment_link, r"\1", zettel_paths)
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
 
 
