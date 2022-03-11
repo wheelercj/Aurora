@@ -8,7 +8,7 @@ import shutil
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Dict, Optional, Any
 from functools import cache
 import logging
 
@@ -475,8 +475,7 @@ def convert_attachment_links(all_html_paths: List[str]) -> int:
     all_html_paths : List[str]
         The list of all HTML files to convert links in.
     """
-    md_link_pattern = r"\[(.+)]\((.+)\)"
-    n = replace_pattern(md_link_pattern, r'<a href="\2">\1</a>', all_html_paths)
+    n = replace_pattern(patterns.md_link, r'<a href="\2">\1</a>', all_html_paths)
     return n
 
 
@@ -506,9 +505,8 @@ def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The zettels to change the links in.
     """
-    md_link_pattern = r"(?<=\S)\.md(?=\))"
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(md_link_pattern, ".html", zettel_paths)
+    n = replace_pattern(patterns.md_ext_in_link, ".html", zettel_paths)
     logging.info(
         f"Converted {n} internal links from ending with `.md` to "
         "ending with `.html`."
@@ -585,9 +583,8 @@ def remove_all_tags(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The zettels to remove the tags from.
     """
-    tag_pattern = r"(?<=\s)#[a-zA-Z0-9_-]+"
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(tag_pattern, "", zettel_paths)
+    n = replace_pattern(patterns.tag, "", zettel_paths)
     logging.info(f"Removed {n} tags.")
 
 
@@ -725,7 +722,7 @@ def get_footer_html(site_path: str, footer_text: str = "") -> str:
 
 
 def replace_pattern(
-    uncompiled_pattern: str,
+    compiled_pattern: str,
     replacement: str,
     file_paths: List[str],
     encoding: str = "utf8",
@@ -736,7 +733,7 @@ def replace_pattern(
 
     Parameters
     ----------
-    uncompiled_pattern : str
+    compiled_pattern : str
         The regex pattern to search for.
     replacement : str
         The string to replace the pattern with.
@@ -746,7 +743,6 @@ def replace_pattern(
         The encoding of the files.
     """
     total_replaced = 0
-    chosen_pattern = re.compile(uncompiled_pattern)
 
     for file_path in file_paths:
         contents = get_file_contents(file_path, encoding)
@@ -761,7 +757,7 @@ def replace_pattern(
             contents = patterns.single_codeblock.sub("␞", contents)
 
         # Replace the pattern.
-        new_contents, n_replaced = chosen_pattern.subn(replacement, contents)
+        new_contents, n_replaced = compiled_pattern.subn(replacement, contents)
         total_replaced += n_replaced
 
         # Put back the code blocks.
@@ -806,11 +802,10 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     """
     zettel_paths = get_file_paths(zettelkasten_path, ".md")
     zettels_to_publish = []
-    published_tag_pattern = re.compile(r"(?<=\s)#published(?=\s)")
 
     for zettel_path in zettel_paths:
         contents = get_file_contents(zettel_path, "utf8")
-        match = published_tag_pattern.search(contents)
+        match = patterns.published_tag.search(contents)
         if match:
             zettels_to_publish.append(zettel_path)
 
@@ -859,7 +854,7 @@ def edit_categorical_index_file(zettels: List[Zettel]) -> None:
     index_zettel = get_zettel_by_file_name("index", zettels)
     with open(index_zettel.path, "r", encoding="utf8") as file:
         index_contents = file.read()
-    index_tags: List[str] = patterns.tags.findall(index_contents)
+    index_tags: List[str] = patterns.tag.findall(index_contents)
     if "#published" not in index_tags:
         sg.popup("index.md must have the #published tag.")
         sys.exit("index.md must have the #published tag.")
@@ -1033,24 +1028,22 @@ def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
 
 
 def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
-    """Gets the file attachment links in multiple zettels.
+    """Gets the file and folder attachment paths in multiple zettels.
+
+    Both absolute and relative paths are included.
 
     Parameters
     ----------
     zettels : List[Zettel]
-        The zettels to get the file attachment links of.
+        The zettels from which to get the file and folder attachment paths.
     """
     all_attachment_paths = []
-
-    attachment_pattern = re.compile(r"(?<=]\()(.+\S\.(pdf|png|jpg|jpeg))(?=\))")
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
-        file_attachment_groups: List[Tuple[str]] = attachment_pattern.findall(contents)
-        for group in file_attachment_groups:
-            if os.path.exists(group[0]):
-                all_attachment_paths.append(group[0])
-
+        all_attachment_paths.extend(
+            patterns.get_attachment_paths(contents, zettel.folder_path)
+        )
     return all_attachment_paths
 
 

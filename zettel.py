@@ -10,6 +10,7 @@ import patterns
 class Zettel:
     def __init__(self, zettel_path: str):
         self.path: str = zettel_path
+        self.folder_path: str = os.path.dirname(zettel_path)
         self.file_name: str = self.get_zettel_file_name()  # includes extension
         self.id: str = self.get_zettel_id()
         self.title: str = self.get_zettel_title()
@@ -51,7 +52,7 @@ class Zettel:
         """Gets all the tags in the zettel."""
         with open(self.path, "r", encoding="utf8") as file:
             contents = file.read()
-        tags: List[str] = patterns.tags.findall(contents)
+        tags: List[str] = patterns.tag.findall(contents)
         return tags
 
     def create_html_file(self) -> str:
@@ -77,7 +78,7 @@ class Zettel:
 
 def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
     """Gets a zettel by its zettel ID.
-    
+
     Parameters
     ----------
     link_id : str
@@ -92,7 +93,7 @@ def get_zettel_by_id(link_id: str, zettels: List[Zettel]) -> Zettel:
 
 def get_zettel_by_file_name(file_name: str, zettels: List[Zettel]) -> Optional[Zettel]:
     """Gets a zettel by its file name, not including the extension.
-    
+
     Parameters
     ----------
     file_name : str
