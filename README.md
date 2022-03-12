@@ -40,3 +40,9 @@ Feature requests, contributions, etc. are welcome!
 
 ### Detailed answer
 When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's pages folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the pages folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
+
+## third party dependencies
+
+* [Pygments](https://pygments.org/)
+* [PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/)
+* [Mistune](https://github.com/lepture/mistune)
