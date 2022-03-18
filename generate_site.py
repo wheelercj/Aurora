@@ -160,8 +160,8 @@ def generate_site(settings: dict = None) -> None:
     for path in new_html_paths:
         logging.info(f"  {path}")
 
-    print(f"Successfully generated {len(new_html_paths)} HTML files.")
     show_progress(100)
+    print(f"Successfully generated {len(new_html_paths)} HTML files.")
 
 
 def append_copyright_notice(site_path: str, copyright_text: str) -> None:
@@ -1145,17 +1145,16 @@ def delete_old_html_files(
         if old_path not in all_html_paths:
             if old_path not in ignored_html_paths:
                 old_count += 1
-                print(f"  Ready to delete {old_path}.")
-                answer = input("  Confirm (y/n): ").lower()
-                if answer == "y":
+                answer = sg.PopupYesNo(f"Ready to delete {old_path}.\nDelete?")
+                if answer == "Yes":
                     os.remove(old_path)
-                    print("    File deleted.")
+                    sg.popup(f"Deleted {old_path}.")
                 else:
-                    print("    File saved.")
+                    sg.popup(f"Did not delete {old_path}.")
     if not old_count:
-        print("No old HTML files found.")
+        logging.info("No old HTML files found.")
     else:
-        print(f"  Deleted {old_count} files.")
+        logging.info(f"  Deleted {old_count} files.")
 
 
 if __name__ == "__main__":
