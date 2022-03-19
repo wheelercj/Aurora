@@ -1,3 +1,42 @@
+"""Manages the app's settings.
+
+Settings
+--------
+'body background color' : str
+    The color of the background of the site as a hex RGB string.
+'body hover color' : str
+    The color of links in the body when they are hovered over, as a hex RGB
+    string.
+'body link color' : str
+    The color of links in the body, as a hex RGB string.
+'copyright text' : str
+    The copyright notice that will appear at the bottom of the index page.
+'header background color' : str
+    The color of the background of the header as a hex RGB string.
+'header hover color' : str
+    The color of links in the header when they are hovered over, as a hex
+    RGB string.
+'header text color' : str
+    The color of the text in the header as a hex RGB string.
+'hide chrono index dates' : bool
+    If true, file creation dates will not be shown in the chronological
+    index.
+'hide tags' : bool
+    If true, tags will be removed from the copied zettels when generating
+    the site.
+'internal link prefix' : str
+    Text that will be prepended to internal links. This setting can be an empty
+    string.
+'site path' : str
+    The absolute path to the root folder of the site's files.
+'site subfolder name' : str
+    The name of the folder within the site folder that most of the HTML
+    pages will be placed in by default.
+'site title' : str
+    The title that will appear at the top of the site.
+'zettelkasten path' : str
+    The absolute path to the zettelkasten folder.
+"""
 from datetime import datetime
 import json
 from typing import Dict, Union, Optional
@@ -28,7 +67,9 @@ def show_settings_window(
         new_settings = filter_items(new_settings)
         settings_are_valid = validate_settings(new_settings)
         if not settings_are_valid:
-            sg.popup("Each setting must be given a value.")
+            sg.popup(
+                "Each setting must be given a value, except the internal link prefix setting."
+            )
     if event != "cancel":
         save_settings(new_settings)
     window.close()
@@ -52,40 +93,6 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     ------
     ValueError
         If a valid fallback option was not chosen and is needed.
-
-    Returned Dictionary Items
-    -------------------------
-    'zettelkasten path' : str
-        The absolute path to the zettelkasten folder.
-    'site path' : str
-        The absolute path to the root folder of the site's files.
-    'site title' : str
-        The title that will appear at the top of the site.
-    'copyright text' : str
-        The copyright notice that will appear at the bottom of the index page.
-    'site subfolder name' : str
-        The name of the folder within the site folder that most of the HTML
-        pages will be placed in by default.
-    'body background color' : str
-        The color of the background of the site as a hex RGB string.
-    'header background color' : str
-        The color of the background of the header as a hex RGB string.
-    'header text color' : str
-        The color of the text in the header as a hex RGB string.
-    'header hover color' : str
-        The color of links in the header when they are hovered over, as a hex
-        RGB string.
-    'body link color' : str
-        The color of links in the body, as a hex RGB string.
-    'body hover color' : str
-        The color of links in the body when they are hovered over, as a hex RGB
-        string.
-    'hide tags' : bool
-        If true, tags will be removed from the copied zettels when generating
-        the site.
-    'hide chrono index dates' : bool
-        If true, file creation dates will not be shown in the chronological
-        index.
     """
     try:
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -120,19 +127,20 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
     """Gets the application's default user settings."""
     this_year = datetime.now().year
     return {
-        "zettelkasten path": "",
-        "site path": "",
-        "site title": "",
-        "copyright text": f"© {this_year}, your name",
-        "site subfolder name": "pages",
         "body background color": "#fffafa",  # snow
-        "header background color": "#81b622",  # lime green
-        "header text color": "#ecf87f",  # yellow green
-        "header hover color": "#3d550c",  # olive green
-        "body link color": "#59981a",  # green
         "body hover color": "#3d550c",  # olive green
-        "hide tags": True,
+        "body link color": "#59981a",  # green
+        "copyright text": f"© {this_year}, your name",
+        "header background color": "#81b622",  # lime green
+        "header hover color": "#3d550c",  # olive green
+        "header text color": "#ecf87f",  # yellow green
         "hide chrono index dates": True,
+        "hide tags": True,
+        "internal link prefix": "[§] ",
+        "site path": "",
+        "site subfolder name": "pages",
+        "site title": "",
+        "zettelkasten path": "",
     }
 
 
@@ -150,6 +158,7 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
         create_text_chooser("site title", settings),
         create_text_chooser("copyright text", settings),
         create_text_chooser("site subfolder name", settings),
+        create_text_chooser("internal link prefix", settings),
         create_folder_chooser("site path", settings),
         create_folder_chooser("zettelkasten path", settings),
         create_checkbox("hide tags", "hide tags", settings),
@@ -283,8 +292,8 @@ def validate_settings(settings: dict) -> bool:
     settings : dict
         The settings to validate.
     """
-    for value in settings.values():
+    for key, value in settings.items():
         if isinstance(value, str):
-            if not value:
+            if not value and key != "internal link prefix":
                 return False
     return True
