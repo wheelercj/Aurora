@@ -46,3 +46,4 @@ When the site files are being generated, all currently existing markdown and HTM
 * [Pygments](https://pygments.org/)
 * [PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/)
 * [Mistune](https://github.com/lepture/mistune)
+* [Send2Trash](https://pypi.org/project/Send2Trash/)

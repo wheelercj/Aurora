@@ -8,6 +8,7 @@ import shutil
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+import send2trash  # https://pypi.org/project/Send2Trash/
 from typing import List, Tuple, Dict, Optional, Any
 from functools import cache
 import logging
@@ -1195,12 +1196,12 @@ def delete_old_html_files(
         if old_path not in all_html_paths:
             if old_path not in ignored_html_paths:
                 old_count += 1
-                answer = sg.PopupYesNo(f"Ready to delete {old_path}.\nDelete?")
+                answer = sg.PopupYesNo(f"Ready to move to trash: {old_path}.\nDelete?")
                 if answer == "Yes":
-                    os.remove(old_path)
-                    sg.popup(f"Deleted {old_path}.")
+                    send2trash.send2trash(old_path)
+                    sg.popup(f"Moved file to trash: {old_path}.")
                 else:
-                    sg.popup(f"Did not delete {old_path}.")
+                    sg.popup(f"Saved {old_path}.")
     if not old_count:
         logging.info("No old HTML files found.")
     else:
