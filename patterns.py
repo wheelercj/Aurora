@@ -3,7 +3,8 @@
 Attributes
 ----------
 absolute_attachment_link : str
-    The pattern of a markdown link containing an absolute path to a file.
+    The pattern of a markdown link containing an absolute path to a file. The
+    first capture group is the file's name and extension.
 h1_content : re.Pattern
     The pattern of a header of level 1.
 link_path : str
@@ -33,7 +34,7 @@ from typing import List
 
 
 absolute_attachment_link = re.compile(
-    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.(pdf|png|jpg|jpeg))(?=\))"
+    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9]+)(?=\))"
 )
 link_path = re.compile(r"(?<=]\().+(?=\))")
 h1_content = re.compile(r"(?<=#\s).+")

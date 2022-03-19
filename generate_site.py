@@ -8,7 +8,7 @@ import shutil
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
-from typing import List, Dict, Optional, Any
+from typing import List, Tuple, Dict, Optional, Any
 from functools import cache
 import logging
 
@@ -525,7 +525,9 @@ def make_file_paths_relative(zettels: List[Zettel]) -> None:
         The zettels to change the paths in.
     """
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(patterns.absolute_attachment_link, r"\1", zettel_paths)
+    n = replace_pattern(
+        patterns.absolute_attachment_link, r"\1", zettel_paths, file_must_exist=True
+    )
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
 
 
@@ -729,6 +731,7 @@ def replace_pattern(
     replacement: str,
     file_paths: List[str],
     encoding: str = "utf8",
+    file_must_exist: bool = False,
 ) -> int:
     """Replaces a regex pattern with a string in multiple files
 
@@ -739,11 +742,16 @@ def replace_pattern(
     compiled_pattern : str
         The regex pattern to search for.
     replacement : str
-        The string to replace the pattern with.
+        The string to replace the pattern with. This can be a regex group
+        reference.
     file_paths : List[str]
         The paths to the files to search in.
     encoding : str
         The encoding of the files.
+    file_must_exist : bool
+        Whether any file paths matched by the compiled pattern must exist.
+        Assumes the compiled pattern is for searching for file paths but will
+        sometimes match other things too.
     """
     total_replaced = 0
 
@@ -760,25 +768,64 @@ def replace_pattern(
             contents = patterns.single_codeblock.sub("␞", contents)
 
         # Replace the pattern.
-        new_contents, n_replaced = compiled_pattern.subn(replacement, contents)
+        if not file_must_exist:
+            contents, n_replaced = compiled_pattern.subn(replacement, contents)
+        else:
+            contents, n_replaced = replace_file_paths(
+                compiled_pattern, replacement, contents
+            )
         total_replaced += n_replaced
 
         # Put back the code blocks.
         for single_codeblock in single_codeblocks:
-            new_contents = re.sub(
-                r"␞", single_codeblock.replace("\\", r"\\"), new_contents, count=1
+            contents = re.sub(
+                r"␞", single_codeblock.replace("\\", r"\\"), contents, count=1
             )
         for triple_codeblock in triple_codeblocks:
-            new_contents = re.sub(
-                r"␝", triple_codeblock[0].replace("\\", r"\\"), new_contents, count=1
+            contents = re.sub(
+                r"␝", triple_codeblock[0].replace("\\", r"\\"), contents, count=1
             )
 
         # Save changes.
         if n_replaced > 0:
             with open(file_path, "w", encoding=encoding) as file:
-                file.write(new_contents)
+                file.write(contents)
 
     return total_replaced
+
+
+def replace_file_paths(
+    path_pattern: re.Pattern, replacement: str, contents: str
+) -> Tuple[str, int]:
+    """Replaces all file paths in the contents with the correct relative path.
+
+    Parameters
+    ----------
+    path_pattern : re.Pattern
+        The compiled regex pattern to search for.
+    replacement : str
+        The string to replace the pattern with. This can be a regex group
+        reference.
+    contents : str
+        The contents to replace the file links in.
+
+    Returns
+    -------
+    str
+        The contents with the file links replaced.
+    int
+        The number of replacements made.
+    """
+    start = 0
+    n_replaced = 0
+    while True:
+        match = path_pattern.search(contents, start)
+        if not match:
+            return contents, n_replaced
+        if os.path.isfile(match[0]):
+            contents = path_pattern.sub(replacement, contents, count=1)
+            n_replaced += 1
+        start = match.end()
 
 
 def get_zettels_to_publish(zettelkasten_path: str) -> List[Zettel]:
