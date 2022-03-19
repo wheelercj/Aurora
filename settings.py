@@ -107,7 +107,7 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
             settings = show_settings_window()
         else:
             raise ValueError
-
+    settings = add_any_new_settings(settings)
     return settings
 
 
@@ -142,6 +142,15 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         "site title": "",
         "zettelkasten path": "",
     }
+
+
+def add_any_new_settings(settings) -> Dict:
+    """Adds any new settings to the settings dictionary."""
+    default_settings = get_default_settings()
+    for key in default_settings:
+        if key not in settings:
+            settings[key] = default_settings[key]
+    return settings
 
 
 def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
