@@ -27,6 +27,10 @@ Settings
 'internal link prefix' : str
     Text that will be prepended to internal links. This setting can be an empty
     string.
+# 'internal zk link start' : str
+#     The text that indicates the start of an internal zettelkasten link.
+# 'internal zk link end' : str
+#     The text that indicates the end of an internal zettelkasten link.
 'site path' : str
     The absolute path to the root folder of the site's files.
 'site subfolder name' : str
@@ -137,6 +141,8 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         "hide chrono index dates": True,
         "hide tags": True,
         "internal link prefix": "[§] ",
+        # "internal zk link start": "[[",
+        # "internal zk link end": "]]",
         "site path": "",
         "site subfolder name": "pages",
         "site title": "",
@@ -168,6 +174,8 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
         create_text_chooser("copyright text", settings),
         create_text_chooser("site subfolder name", settings),
         create_text_chooser("internal link prefix", settings),
+        # create_text_chooser("internal zk link start", settings),
+        # create_text_chooser("internal zk link end", settings),
         create_folder_chooser("site path", settings),
         create_folder_chooser("zettelkasten path", settings),
         create_checkbox("hide tags", "hide tags", settings),
