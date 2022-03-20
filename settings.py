@@ -43,20 +43,18 @@ Settings
 """
 from datetime import datetime
 import json
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Literal
 import sys
 import os
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 
 
-def show_settings_window(
-    settings: Optional[dict] = None,
-) -> Dict[str, Union[str, bool]]:
+def show_settings_window(settings: dict = None) -> Dict[str, Union[str, bool]]:
     """Runs the settings menu and returns the settings.
 
     Parameters
     ----------
-    settings : dict, optional
+    settings : dict, None
         The settings to use. If not provided, the default settings will be
         used.
     """
@@ -81,7 +79,9 @@ def show_settings_window(
     return new_settings
 
 
-def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
+def load_settings(
+    fallback_option: Literal["default settings", "prompt user"]
+) -> Dict[str, Union[str, bool]]:
     """Gets the user's settings.
 
     The settings are retrieved from settings.json if the file exists and is not
@@ -92,7 +92,8 @@ def load_settings(fallback_option: str) -> Dict[str, Union[str, bool]]:
     Parameters
     ----------
     fallback_option : str
-        Can be "default settings" or "prompt user".
+        Whether to fall back to default settings or prompting the user to enter
+        settings if the settings don't exist yet.
 
     Raises
     ------
@@ -151,7 +152,7 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
     }
 
 
-def add_any_new_settings(settings) -> Dict:
+def add_any_new_settings(settings: dict) -> dict:
     """Adds any new settings to the settings dictionary."""
     default_settings = get_default_settings()
     for key in default_settings:
@@ -160,12 +161,12 @@ def add_any_new_settings(settings) -> Dict:
     return settings
 
 
-def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
+def create_settings_window(settings: dict = None) -> sg.Window:
     """Creates and displays the settings menu.
 
     Parameters
     ----------
-    settings : dict, optional
+    settings : dict, None
         The settings to use.
     """
     sg.theme("DarkAmber")
