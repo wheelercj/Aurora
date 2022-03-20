@@ -1,5 +1,3 @@
-# Use `pyinstaller -wF generate_site.py` to create an .exe for Windows.
-
 # external imports
 import os
 import sys
@@ -9,7 +7,7 @@ from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 import send2trash  # https://pypi.org/project/Send2Trash/
-from typing import List, Tuple, Dict, Optional, Any
+from typing import List, Tuple, Dict, Any
 from functools import cache
 import logging
 
@@ -18,52 +16,10 @@ logging.basicConfig(
 )  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
-from settings import show_settings_window, load_settings
+from settings import load_settings
 from zettel import Zettel, get_zettel_by_file_name
 import patterns
 from convert_links import convert_links_from_zk_to_md
-
-
-def show_main_menu() -> None:
-    """Runs the main menu."""
-    window = create_main_menu_window()
-    settings = None
-    while True:
-        event, _ = window.read()
-        if event == sg.WIN_CLOSED or event == "exit":
-            window.close()
-            return
-        window.Hide()
-        settings = respond_to_main_menu_event(event, settings)
-        window.UnHide()
-
-
-def create_main_menu_window() -> sg.Window:
-    """Creates and displays the main menu."""
-    sg.theme("DarkAmber")
-    layout = [
-        [sg.Button("generate site", size=(14, 1), pad=(40, 5))],
-        [sg.Button("settings", size=(14, 1), pad=(40, 5))],
-        [sg.Button("exit", size=(14, 1), pad=(40, 5))],
-    ]
-    return sg.Window("zk-ssg", layout)
-
-
-def respond_to_main_menu_event(event: str, settings: dict = None) -> Optional[dict]:
-    """Handles main menu events.
-
-    Parameters
-    ----------
-    event : str
-        The event that was triggered.
-    settings : dict, None
-        The settings dictionary. If not provided, the settings will be loaded.
-    """
-    if event == "generate site":
-        generate_site(settings)
-    elif event == "settings":
-        settings = show_settings_window(settings)
-    return settings
 
 
 def show_progress(n: int) -> None:
@@ -1206,7 +1162,3 @@ def delete_old_html_files(
         logging.info("No old HTML files found.")
     else:
         logging.info(f"  Deleted {old_count} files.")
-
-
-if __name__ == "__main__":
-    show_main_menu()
