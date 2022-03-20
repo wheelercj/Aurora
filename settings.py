@@ -91,7 +91,7 @@ def load_settings(
 
     Parameters
     ----------
-    fallback_option : str
+    fallback_option : Literal["default settings", "prompt user"]
         Whether to fall back to default settings or prompting the user to enter
         settings if the settings don't exist yet.
 
