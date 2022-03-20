@@ -24,7 +24,7 @@ Settings
 'hide tags' : bool
     If true, tags will be removed from the copied zettels when generating
     the site.
-'internal link prefix' : str
+'internal html link prefix' : str
     Text that will be prepended to internal links. This setting can be an empty
     string.
 # 'internal zk link start' : str
@@ -72,7 +72,8 @@ def show_settings_window(
         settings_are_valid = validate_settings(new_settings)
         if not settings_are_valid:
             sg.popup(
-                "Each setting must be given a value, except the internal link prefix setting."
+                "Each setting must be given a value, except the internal html"
+                "link prefix setting."
             )
     if event != "cancel":
         save_settings(new_settings)
@@ -140,7 +141,7 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         "header text color": "#ecf87f",  # yellow green
         "hide chrono index dates": True,
         "hide tags": True,
-        "internal link prefix": "[§] ",
+        "internal html link prefix": "[§] ",
         # "internal zk link start": "[[",
         # "internal zk link end": "]]",
         "site path": "",
@@ -173,7 +174,7 @@ def create_settings_window(settings: Optional[dict] = None) -> sg.Window:
         create_text_chooser("site title", settings),
         create_text_chooser("copyright text", settings),
         create_text_chooser("site subfolder name", settings),
-        create_text_chooser("internal link prefix", settings),
+        create_text_chooser("internal HTML link prefix", settings),
         # create_text_chooser("internal zk link start", settings),
         # create_text_chooser("internal zk link end", settings),
         create_folder_chooser("site path", settings),
@@ -311,6 +312,6 @@ def validate_settings(settings: dict) -> bool:
     """
     for key, value in settings.items():
         if isinstance(value, str):
-            if not value and key != "internal link prefix":
+            if not value and key != "internal html link prefix":
                 return False
     return True

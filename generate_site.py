@@ -421,12 +421,12 @@ def md_linker_creator(settings: dict) -> str:
         """
         if linked_zettel.id.isnumeric() and not zettel.id.isnumeric():
             markdown_link = (
-                f"[{settings['internal link prefix']}{linked_zettel.title}]"
+                f"[{settings['internal html link prefix']}{linked_zettel.title}]"
                 f"({settings['site subfolder name']}/{linked_zettel.id}.md)"
             )
         else:
             markdown_link = (
-                f"[{settings['internal link prefix']}{linked_zettel.title}]"
+                f"[{settings['internal html link prefix']}{linked_zettel.title}]"
                 f"({linked_zettel.id}.md)"
             )
         return markdown_link
