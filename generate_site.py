@@ -16,7 +16,7 @@ logging.basicConfig(
 )  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
-from settings import load_settings
+from settings import Settings
 from zettel import Zettel, get_zettel_by_file_name
 import patterns
 from convert_links import convert_links_from_zk_to_md
@@ -33,19 +33,17 @@ def show_progress(n: int) -> None:
     sg.one_line_progress_meter("generating the site", n, 100, "progress meter")
 
 
-def generate_site(settings: dict = None) -> None:
+def generate_site(settings: Settings) -> None:
     """Generates all the site's files.
 
     Parameters
     ----------
-    settings : dict, None
+    settings : Settings
         The settings dictionary. If not provided, the settings will be loaded
         from the settings.json file.
     """
     show_progress(0)
     logging.info("Getting the application settings.")
-    if not settings:
-        settings = load_settings("prompt user")
     site_path = settings["site path"]
     zettelkasten_path = settings["zettelkasten path"]
 

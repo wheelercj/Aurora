@@ -42,26 +42,22 @@ Settings
     The absolute path to the zettelkasten folder.
 """
 from datetime import datetime
-import json
-from typing import Dict, Union, Literal
 import sys
 import os
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+from app_settings_dict import Settings  # https://pypi.org/project/app-settings-dict/
 
 
-def show_settings_window(settings: dict = None) -> Dict[str, Union[str, bool]]:
+def show_settings_window(settings: Settings) -> Settings:
     """Runs the settings menu and returns the settings.
 
     Parameters
     ----------
-    settings : dict, None
-        The settings to use. If not provided, the default settings will be
-        used.
+    settings : Settings
+        The current application settings.
     """
-    if not settings:
-        settings = load_settings(fallback_option="default settings")
     settings_are_valid = False
-    window = create_settings_window(settings)
+    window = create_settings_window(settings.data)
     while not settings_are_valid:
         event, new_settings = window.read()
         if event == sg.WIN_CLOSED:
@@ -70,69 +66,24 @@ def show_settings_window(settings: dict = None) -> Dict[str, Union[str, bool]]:
         settings_are_valid = validate_settings(new_settings)
         if not settings_are_valid:
             sg.popup(
-                "Each setting must be given a value, except the internal html"
+                "Each setting must be given a value, except the internal html "
                 "link prefix setting."
             )
-    if event != "cancel":
-        save_settings(new_settings)
     window.close()
-    return new_settings
-
-
-def load_settings(
-    fallback_option: Literal["default settings", "prompt user"]
-) -> Dict[str, Union[str, bool]]:
-    """Gets the user's settings.
-
-    The settings are retrieved from settings.json if the file exists and is not
-    empty. Otherwise, they are retrieved directly from the user via a settings
-    menu or from default settings in the code depending on the chosen fallback
-    option.
-
-    Parameters
-    ----------
-    fallback_option : Literal["default settings", "prompt user"]
-        Whether to fall back to default settings or prompting the user to enter
-        settings if the settings don't exist yet.
-
-    Raises
-    ------
-    ValueError
-        If a valid fallback option was not chosen and is needed.
-    """
-    try:
-        os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        with open("settings.json", "r", encoding="utf8") as file:
-            settings = json.load(file)
-        if not settings:
-            raise FileNotFoundError
-    except FileNotFoundError:
-        if fallback_option == "default settings":
-            settings = get_default_settings()
-        elif fallback_option == "prompt user":
-            settings = show_settings_window()
-        else:
-            raise ValueError
-    settings = add_any_new_settings(settings)
+    if event == "cancel":
+        return settings
+    settings.update(new_settings)
+    settings.save()
     return settings
 
 
-def save_settings(settings: dict) -> None:
-    """Saves the user's settings to settings.json.
-
-    Parameters
-    ----------
-    settings : dict
-        The settings to save.
-    """
-    with open("settings.json", "w", encoding="utf8") as file:
-        json.dump(settings, file)
-
-
-def get_default_settings() -> Dict[str, Union[str, bool]]:
-    """Gets the application's default user settings."""
-    this_year = datetime.now().year
-    return {
+settings_folder_path = os.path.dirname(os.path.abspath(__file__))
+settings_file_path = os.path.join(settings_folder_path, "settings.json")
+this_year = datetime.now().year
+settings = Settings(
+    settings_file_path=settings_file_path,
+    prompt_user_for_all_settings=show_settings_window,
+    data={
         "body background color": "#fffafa",  # snow
         "body hover color": "#3d550c",  # olive green
         "body link color": "#59981a",  # green
@@ -150,15 +101,8 @@ def get_default_settings() -> Dict[str, Union[str, bool]]:
         "site title": "",
         "zettelkasten path": "",
     }
-
-
-def add_any_new_settings(settings: dict) -> dict:
-    """Adds any new settings to the settings dictionary."""
-    default_settings = get_default_settings()
-    for key in default_settings:
-        if key not in settings:
-            settings[key] = default_settings[key]
-    return settings
+)
+settings.load(fallback_option="prompt user")
 
 
 def create_settings_window(settings: dict = None) -> sg.Window:

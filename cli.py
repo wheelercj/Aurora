@@ -1,8 +1,9 @@
 from generate_site import generate_site
+from settings import settings
 
 
 def main() -> None:
-    generate_site()
+    generate_site(settings)
 
 
 if __name__ == "__main__":
