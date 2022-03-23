@@ -175,7 +175,7 @@ def create_settings_window(settings: dict = None) -> sg.Window:
         create_text_chooser("site title", settings),
         create_text_chooser("copyright text", settings),
         create_text_chooser("site subfolder name", settings),
-        create_text_chooser("internal HTML link prefix", settings),
+        create_text_chooser("internal html link prefix", settings),
         # create_text_chooser("internal zk link start", settings),
         # create_text_chooser("internal zk link end", settings),
         create_folder_chooser("site path", settings),
