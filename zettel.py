@@ -4,7 +4,7 @@ from typing import List, Optional
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
 
 # internal imports
-import patterns
+from settings import settings
 
 
 class Zettel:
@@ -36,7 +36,7 @@ class Zettel:
 
         with open(self.path, "r", encoding="utf8") as file:
             contents = file.read()
-        match = patterns.h1_content.search(contents)
+        match = settings["patterns"]["h1 content"].search(contents)
         if match:
             return match[0]
         raise ValueError(f"Zettel missing a title: {self.file_name}")
@@ -52,7 +52,7 @@ class Zettel:
         """Gets all the tags in the zettel."""
         with open(self.path, "r", encoding="utf8") as file:
             contents = file.read()
-        tags: List[str] = patterns.tag.findall(contents)
+        tags: List[str] = settings["patterns"]["tag"].findall(contents)
         return tags
 
     def create_html_file(self) -> str:

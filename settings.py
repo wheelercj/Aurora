@@ -27,11 +27,33 @@ Settings
 'internal html link prefix' : str
     Text that will be prepended to internal links. This setting can be an empty
     string.
-# 'internal zk link start' : str
-#     The text that indicates the start of an internal zettelkasten link.
-# 'internal zk link end' : str
-#     The text that indicates the end of an internal zettelkasten link.
-'site path' : str
+'patterns' : Settings
+    'absolute attachment link' : re.Pattern
+        The pattern of a markdown link containing an absolute path to a file.
+        The first capture group is the file's name and extension.
+    'h1 content' : re.Pattern
+        The pattern of a header of level 1.
+    'link path' : re.Pattern
+        The pattern of a markdown link containing a path to a file or website,
+        and the path may be either relative or absolute.
+    'md ext in link' : re.Pattern
+        The pattern of a markdown file path extension in a markdown link.
+    'md link' : re.Pattern
+        The pattern of a markdown link.
+    'published tag' : re.Pattern
+        The pattern of the ``#published`` tag.
+    'single codeblock' : re.Pattern
+        The pattern of a codeblock delimited by single backticks (an inline 
+        codeblock).
+    'tag' : re.Pattern
+        The pattern of a tag, including a #. Assumes the tag is not at the very
+        beginning of the string.
+    'triple codeblock' : re.Pattern
+        The pattern of a codeblock delimited by triple backticks.
+    'zettel link id' : re.Pattern
+        The pattern of a zettelkasten-style internal link that follows Zettlr's
+        default settings (double square braces surrounding a 14-digit number).
+'site folder path' : str
     The absolute path to the root folder of the site's files.
 'site subfolder name' : str
     The name of the folder within the site folder that most of the HTML
@@ -41,10 +63,16 @@ Settings
 'zettelkasten path' : str
     The absolute path to the zettelkasten folder.
 """
+# 'internal zk link start' : str
+#     The text that indicates the start of an internal zettelkasten link.
+# 'internal zk link end' : str
+#     The text that indicates the end of an internal zettelkasten link.
 from datetime import datetime
 import sys
 import os
+import re
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+from tkinter.filedialog import askdirectory
 from app_settings_dict import Settings  # https://pypi.org/project/app-settings-dict/
 
 
@@ -77,12 +105,40 @@ def show_settings_window(settings: Settings) -> Settings:
     return settings
 
 
+def request_site_folder_path() -> str:
+    """Prompts the user for the site's root folder path.
+
+    Returns
+    -------
+    str
+        The path to the site's root folder.
+    """
+    sg.PopupOK("Please select the folder that will contain the site's files.")
+    return askdirectory(title="site folder", mustexist=True)
+
+
+def request_zettelkasten_path() -> str:
+    """Prompts the user for the zettelkasten folder path.
+
+    Returns
+    -------
+    str
+        The path to the zettelkasten folder.
+    """
+    sg.PopupOK("Please select the folder that contains the zettelkasten.")
+    return askdirectory(title="zettelkasten folder", mustexist=True)
+
+
 settings_folder_path = os.path.dirname(os.path.abspath(__file__))
 settings_file_path = os.path.join(settings_folder_path, "settings.json")
 this_year = datetime.now().year
 settings = Settings(
     settings_file_path=settings_file_path,
     prompt_user_for_all_settings=show_settings_window,
+    default_factories={
+        "site folder path": request_site_folder_path,
+        "zettelkasten path": request_zettelkasten_path,
+    },
     data={
         "body background color": "#fffafa",  # snow
         "body hover color": "#3d550c",  # olive green
@@ -96,11 +152,27 @@ settings = Settings(
         "internal html link prefix": "[§] ",
         # "internal zk link start": "[[",
         # "internal zk link end": "]]",
-        "site path": "",
+        "patterns": Settings(
+            setting_dumper=lambda x: x.pattern,
+            setting_loader=re.compile,
+            data={
+                "absolute attachment link": re.compile(
+                    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9]+)(?=\))"
+                ),
+                "link path": re.compile(r"(?<=]\().+(?=\))"),
+                "h1 content": re.compile(r"(?<=#\s).+"),
+                "md ext in link": re.compile(r"(?<=\S)\.md(?=\))"),
+                "md link": re.compile(r"\[(.+)]\((.+)\)"),
+                "published tag": re.compile(r"(?<=\s)#published(?=\s)"),
+                "single codeblock": re.compile(r"(`[^`]+?`)"),
+                "tag": re.compile(r"(?<=\s)#[a-zA-Z0-9_-]+"),
+                "triple codeblock": re.compile(r"(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})"),
+                "zettel link id": re.compile(r"(?<=\[\[)\d{14}(?=\]\])"),
+            },
+        ),
         "site subfolder name": "pages",
-        "site title": "",
-        "zettelkasten path": "",
-    }
+        "site title": "Site Title Here",
+    },
 )
 settings.load(fallback_option="prompt user")
 
@@ -122,7 +194,7 @@ def create_settings_window(settings: dict = None) -> sg.Window:
         create_text_chooser("internal html link prefix", settings),
         # create_text_chooser("internal zk link start", settings),
         # create_text_chooser("internal zk link end", settings),
-        create_folder_chooser("site path", settings),
+        create_folder_chooser("site folder path", settings),
         create_folder_chooser("zettelkasten path", settings),
         create_checkbox("hide tags", "hide tags", settings),
         create_checkbox(

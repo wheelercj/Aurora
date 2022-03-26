@@ -5,8 +5,7 @@ import logging
 
 # internal imports
 from zettel import Zettel, get_zettel_by_id
-import patterns
-
+from settings import settings
 
 md_linker_type = Callable[[Zettel, Zettel], str]
 
@@ -43,12 +42,10 @@ def convert_links_from_zk_to_md(
     if md_linker is None:
         md_linker = lambda _, linked_z: f"[{linked_z.title}]({linked_z.file_name})"
     if link_id_pattern is None:
-        link_id_pattern = patterns.zettel_link_id
+        link_id_pattern = settings["patterns"]["zettel link id"]
 
     for zettel in zettels:
-        convert_zettel_links_from_zk_to_md(
-            zettel, zettels, md_linker, link_id_pattern
-        )
+        convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker, link_id_pattern)
 
 
 def convert_zettel_links_from_zk_to_md(

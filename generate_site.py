@@ -16,9 +16,8 @@ logging.basicConfig(
 )  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 # internal imports
-from settings import Settings
+from settings import Settings, settings
 from zettel import Zettel, get_zettel_by_file_name
-import patterns
 from convert_links import convert_links_from_zk_to_md
 
 
@@ -44,8 +43,12 @@ def generate_site(settings: Settings) -> None:
     """
     show_progress(0)
     logging.info("Getting the application settings.")
-    site_path = settings["site path"]
+    site_path = settings["site folder path"]
+    if not site_path:
+        site_path = settings.prompt("site folder path")
     zettelkasten_path = settings["zettelkasten path"]
+    if not zettelkasten_path:
+        zettelkasten_path = settings.prompt("zettelkasten path")
 
     this_dir, _ = os.path.split(__file__)
     if 3 > len({this_dir, site_path, zettelkasten_path}):
@@ -321,7 +324,7 @@ def check_links(zettels: List[Zettel]) -> None:
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
-        ids = patterns.zettel_link_id.findall(contents)
+        ids = settings["patterns"]["zettel link id"].findall(contents)
         for id in ids:
             if id not in (z.id for z in zettels):
                 sg.popup(
@@ -433,7 +436,9 @@ def convert_attachment_links(all_html_paths: List[str]) -> int:
     all_html_paths : List[str]
         The list of all HTML files to convert links in.
     """
-    n = replace_pattern(patterns.md_link, r'<a href="\2">\1</a>', all_html_paths)
+    n = replace_pattern(
+        settings["patterns"]["md link"], r'<a href="\2">\1</a>', all_html_paths
+    )
     return n
 
 
@@ -464,7 +469,7 @@ def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
         The zettels to change the links in.
     """
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(patterns.md_ext_in_link, ".html", zettel_paths)
+    n = replace_pattern(settings["patterns"]["md ext in link"], ".html", zettel_paths)
     logging.info(
         f"Converted {n} internal links from ending with `.md` to "
         "ending with `.html`."
@@ -481,7 +486,10 @@ def make_file_paths_relative(zettels: List[Zettel]) -> None:
     """
     zettel_paths = [z.path for z in zettels]
     n = replace_pattern(
-        patterns.absolute_attachment_link, r"\1", zettel_paths, file_must_exist=True
+        settings["patterns"]["absolute attachment link"],
+        r"\1",
+        zettel_paths,
+        file_must_exist=True,
     )
     logging.info(f"Converted {n} absolute file paths to relative file paths.")
 
@@ -496,7 +504,7 @@ def copy_attachments(zettels: List[Zettel], site_pages_path: str) -> int:
     site_pages_path : str
         The path to the pages folder within the site folder.
     """
-    attachment_paths = get_attachment_paths(zettels)
+    attachment_paths = get_all_attachment_paths(zettels)
     for path in attachment_paths:
         try:
             shutil.copy(path, site_pages_path)
@@ -544,7 +552,7 @@ def remove_all_tags(zettels: List[Zettel]) -> None:
         The zettels to remove the tags from.
     """
     zettel_paths = [z.path for z in zettels]
-    n = replace_pattern(patterns.tag, "", zettel_paths)
+    n = replace_pattern(settings["patterns"]["tag"], "", zettel_paths)
     logging.info(f"Removed {n} tags.")
 
 
@@ -714,13 +722,13 @@ def replace_pattern(
         contents = get_file_contents(file_path, encoding)
 
         # Temporarily remove any code blocks from contents.
-        triple_codeblocks = patterns.triple_codeblock.findall(contents)
+        triple_codeblocks = settings["patterns"]["triple codeblock"].findall(contents)
         if len(triple_codeblocks):
-            contents = patterns.triple_codeblock.sub("␝", contents)
+            contents = settings["patterns"]["triple codeblock"].sub("␝", contents)
 
-        single_codeblocks = patterns.single_codeblock.findall(contents)
+        single_codeblocks = settings["patterns"]["single codeblock"].findall(contents)
         if len(single_codeblocks):
-            contents = patterns.single_codeblock.sub("␞", contents)
+            contents = settings["patterns"]["single codeblock"].sub("␞", contents)
 
         # Replace the pattern.
         if not file_must_exist:
@@ -810,7 +818,7 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
 
     for zettel_path in zettel_paths:
         contents = get_file_contents(zettel_path, "utf8")
-        match = patterns.published_tag.search(contents)
+        match = settings["patterns"]["published tag"].search(contents)
         if match:
             zettels_to_publish.append(zettel_path)
 
@@ -859,7 +867,7 @@ def edit_categorical_index_file(zettels: List[Zettel]) -> None:
     index_zettel = get_zettel_by_file_name("index", zettels)
     with open(index_zettel.path, "r", encoding="utf8") as file:
         index_contents = file.read()
-    index_tags: List[str] = patterns.tag.findall(index_contents)
+    index_tags: List[str] = settings["patterns"]["tag"].findall(index_contents)
     if "#published" not in index_tags:
         sg.popup("index.md must have the #published tag.")
         sys.exit("index.md must have the #published tag.")
@@ -1032,7 +1040,32 @@ def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
     return file_paths
 
 
-def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
+def get_attachment_paths(contents: str, folder_path: str) -> List[str]:
+    """Gets all absolute and relative paths to files and folders in markdown links.
+
+    Parameters
+    ----------
+    contents : str
+        The contents of the markdown file to search in.
+    folder_path : str
+        The absolute path to the folder containing the markdown file.
+
+    Returns
+    -------
+    List[str]
+        A list of paths to files and/or folders.
+    """
+    file_paths: List[str] = []
+    paths: List[str] = settings["patterns"]["link path"].findall(contents)
+    for path in paths:
+        file_path = os.path.join(folder_path, path)
+        file_path = os.path.normpath(file_path)
+        if os.path.exists(file_path):
+            file_paths.append(file_path)
+    return file_paths
+
+
+def get_all_attachment_paths(zettels: List[Zettel]) -> List[str]:
     """Gets the file and folder attachment paths in multiple zettels.
 
     Both absolute and relative paths are included.
@@ -1046,9 +1079,7 @@ def get_attachment_paths(zettels: List[Zettel]) -> List[str]:
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
-        all_attachment_paths.extend(
-            patterns.get_attachment_paths(contents, zettel.folder_path)
-        )
+        all_attachment_paths.extend(get_attachment_paths(contents, zettel.folder_path))
     return all_attachment_paths
 
 
