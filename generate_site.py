@@ -2,6 +2,7 @@
 import os
 import sys
 import re
+import webbrowser
 import shutil
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
@@ -413,15 +414,14 @@ def regenerate_html_files(
     )
     logging.info("Creating html files from the md files.")
     new_html_paths = create_html_files(zettels)
-    all_html_paths = get_file_paths(site_path, ".html") + get_file_paths(
-        site_pages_path, ".html"
-    )
+    for i, path in enumerate(new_html_paths):
+        new_html_paths[i] = os.path.normpath(path)
 
     logging.info(
         "Deleting any HTML files that were not just generated and "
         "were not listed in ssg-ignore.txt."
     )
-    delete_old_html_files(old_html_paths, all_html_paths, site_pages_path)
+    delete_old_html_files(old_html_paths, new_html_paths, site_pages_path)
 
     return new_html_paths
 
@@ -1146,7 +1146,7 @@ def update_css(site_style_path: str, settings: dict) -> None:
 
 
 def delete_old_html_files(
-    old_html_paths: List[str], all_html_paths: List[str], site_pages_path: str
+    old_html_paths: List[str], new_html_paths: List[str], site_pages_path: str
 ) -> None:
     """Deletes HTML files that are not being generated or saved
 
@@ -1158,9 +1158,8 @@ def delete_old_html_files(
     old_html_paths : List[str]
         The paths of HTML files present before the #published zettels were
         converted to HTML.
-    all_html_paths : List[str]
-        The paths of HTML files present after the #published zettels were
-        converted to HTML.
+    new_html_paths : List[str]
+        The paths of the new HTML files created from the #published zettels.
     site_pages_path : str
         The path to the site's pages folder.
     """
@@ -1172,22 +1171,43 @@ def delete_old_html_files(
         logging.info("  ssg-ignore.txt not found")
         ignored_html_paths = []
 
-    # Make sure all the slashes in all the paths are the same.
-    for path in ignored_html_paths:
-        path = path.replace("/", "\\")
+    for i, path in enumerate(ignored_html_paths):
+        ignored_html_paths[i] = os.path.normpath(path)
 
     old_count = 0
     for old_path in old_html_paths:
-        if old_path not in all_html_paths:
+        old_path = os.path.normpath(old_path)
+        if (
+            old_path not in new_html_paths
+            and not old_path.endswith("footer.html")
+            and not old_path.endswith("header.html")
+        ):
             if old_path not in ignored_html_paths:
                 old_count += 1
-                answer = sg.PopupYesNo(f"Ready to move to trash: {old_path}.\nDelete?")
-                if answer == "Yes":
-                    send2trash.send2trash(old_path)
-                    sg.popup(f"Moved file to trash: {old_path}.")
-                else:
-                    sg.popup(f"Saved {old_path}.")
+                show_delete_confirmation_menu(old_path)
     if not old_count:
         logging.info("No old HTML files found.")
     else:
         logging.info(f"  Deleted {old_count} files.")
+
+
+def show_delete_confirmation_menu(old_path: str) -> None:
+    """Requests to open, delete, or save an HTML file and handles those events."""
+    layout = [
+        [sg.Text(f"Old HTML file found: {old_path}.\nReady to move to trash.")],
+        [sg.Open(), sg.Button("Delete"), sg.Cancel()],
+    ]
+    window = sg.Window(title="Delete?", layout=layout, disable_close=True)
+    while True:
+        event, _ = window.read()
+        if event == "Open":
+            webbrowser.open(old_path, new=2)
+        elif event == "Delete":
+            send2trash.send2trash(old_path)
+            sg.popup(f"Moved file to trash: {old_path}.")
+            window.close()
+            return
+        else:
+            sg.popup(f"Saved {old_path}.")
+            window.close()
+            return
