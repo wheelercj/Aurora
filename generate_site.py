@@ -12,14 +12,16 @@ from typing import List, Tuple, Dict, Any
 from functools import cache
 import logging
 
-logging.basicConfig(
-    level=logging.WARNING
-)  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
-
 # internal imports
 from settings import Settings, settings
 from zettel import Zettel, get_zettel_by_file_name
 from convert_links import convert_links_from_zk_to_md
+
+
+log_path = os.path.join(os.path.dirname(__file__), "zk-ssg.log")
+logging.basicConfig(
+    filename=log_path, encoding="utf-8", filemode="w", level=logging.INFO
+)  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
 
 
 def show_progress(n: int) -> None:
