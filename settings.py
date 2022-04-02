@@ -157,7 +157,7 @@ settings = Settings(
             setting_loader=re.compile,
             data={
                 "absolute attachment link": re.compile(
-                    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9]+)(?=\))"
+                    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9_-]+)(?=\))"
                 ),
                 "link path": re.compile(r"(?<=]\().+(?=\))"),
                 "h1 content": re.compile(r"(?<=#\s).+"),
