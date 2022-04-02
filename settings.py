@@ -27,6 +27,10 @@ Settings
 'internal html link prefix' : str
     Text that will be prepended to internal links. This setting can be an empty
     string.
+'zk link end' : str
+    The text that indicates the end of an internal zettelkasten link.
+'zk link start' : str
+    The text that indicates the start of an internal zettelkasten link.
 'patterns' : Settings
     'absolute attachment link' : re.Pattern
         The pattern of a markdown link containing an absolute path to a file.
@@ -50,9 +54,9 @@ Settings
         beginning of the string.
     'triple codeblock' : re.Pattern
         The pattern of a codeblock delimited by triple backticks.
-    'zettel link id' : re.Pattern
-        The pattern of a zettelkasten-style internal link that follows Zettlr's
-        default settings (double square braces surrounding a 14-digit number).
+    'zk link id' : re.Pattern
+        The pattern of the contents of a zettelkasten-style internal link (not
+        including the link delimiters).
 'site folder path' : str
     The absolute path to the root folder of the site's files.
 'site subfolder name' : str
@@ -63,10 +67,8 @@ Settings
 'zettelkasten path' : str
     The absolute path to the zettelkasten folder.
 """
-# 'internal zk link start' : str
-#     The text that indicates the start of an internal zettelkasten link.
-# 'internal zk link end' : str
-#     The text that indicates the end of an internal zettelkasten link.
+
+
 from datetime import datetime
 import sys
 import os
@@ -150,8 +152,8 @@ settings = Settings(
         "hide chrono index dates": True,
         "hide tags": True,
         "internal html link prefix": "[§] ",
-        # "internal zk link start": "[[",
-        # "internal zk link end": "]]",
+        "zk link start": "[[",
+        "zk link end": "]]",
         "patterns": Settings(
             setting_dumper=lambda x: x.pattern,
             setting_loader=re.compile,
@@ -167,7 +169,7 @@ settings = Settings(
                 "single codeblock": re.compile(r"(`[^`]+?`)"),
                 "tag": re.compile(r"(?<=\s)#[a-zA-Z0-9_-]+"),
                 "triple codeblock": re.compile(r"(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})"),
-                "zettel link id": re.compile(r"(?<=\[\[)\d{14}(?=\]\])"),
+                "zk link id": re.compile(r"(\d{14})"),
             },
         ),
         "site subfolder name": "pages",

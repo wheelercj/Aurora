@@ -42,7 +42,11 @@ def convert_links_from_zk_to_md(
     if md_linker is None:
         md_linker = lambda _, linked_z: f"[{linked_z.title}]({linked_z.file_name})"
     if link_id_pattern is None:
-        link_id_pattern = settings["patterns"]["zettel link id"]
+        link_id_pattern = re.compile(
+            re.escape(settings["zk link start"])
+            + settings["patterns"]["zk link id"].pattern
+            + re.escape(settings["zk link end"])
+        )
 
     for zettel in zettels:
         convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker, link_id_pattern)

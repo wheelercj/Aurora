@@ -324,10 +324,15 @@ def check_links(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The list of zettels to check.
     """
+    pattern = re.compile(
+        re.escape(settings["zk link start"])
+        + settings["patterns"]["zk link id"].pattern
+        + re.escape(settings["zk link end"])
+    )
     for zettel in zettels:
         with open(zettel.path, "r", encoding="utf8") as file:
             contents = file.read()
-        ids = settings["patterns"]["zettel link id"].findall(contents)
+        ids = pattern.findall(contents)
         for id in ids:
             if id not in (z.id for z in zettels):
                 sg.popup(
