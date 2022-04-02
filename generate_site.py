@@ -13,7 +13,7 @@ from functools import cache
 import logging
 
 # internal imports
-from settings import Settings, settings
+from settings import Settings, settings, show_settings_window, validate_settings
 from zettel import Zettel, get_zettel_by_file_name
 from convert_links import convert_links_from_zk_to_md
 
@@ -46,26 +46,13 @@ def generate_site(settings: Settings) -> None:
     """
     show_progress(0)
     logging.info("Getting the application settings.")
+    if not validate_settings(settings):
+        settings = show_settings_window(settings)
     site_path = settings["site folder path"]
-    if not site_path:
-        site_path = settings.prompt("site folder path")
-    zettelkasten_path = settings["zettelkasten path"]
-    if not zettelkasten_path:
-        zettelkasten_path = settings.prompt("zettelkasten path")
-
-    this_dir, _ = os.path.split(__file__)
-    if 3 > len({this_dir, site_path, zettelkasten_path}):
-        error_message = (
-            "Error: the zettelkasten, the website's files, "
-            "and this program's files should probably be in different "
-            "folders."
-        )
-        sg.popup(error_message)
-        sys.exit(error_message)
 
     logging.info("Finding zettels that contain `#published`.")
     show_progress(2)
-    zettels = get_zettels_to_publish(zettelkasten_path)
+    zettels = get_zettels_to_publish(settings["zettelkasten path"])
     logging.info(f"Found {len(zettels)} zettels that contain `#published`.")
     show_progress(5)
     check_links(zettels)

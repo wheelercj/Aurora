@@ -86,19 +86,14 @@ def show_settings_window(settings: Settings) -> Settings:
     settings : Settings
         The current application settings.
     """
-    settings_are_valid = False
     window = create_settings_window(settings.data)
+    settings_are_valid = False
     while not settings_are_valid:
         event, new_settings = window.read()
         if event == sg.WIN_CLOSED:
             sys.exit(0)
         new_settings = filter_items(new_settings)
         settings_are_valid = validate_settings(new_settings)
-        if not settings_are_valid:
-            sg.popup(
-                "Each setting must be given a value, except the internal html "
-                "link prefix setting."
-            )
     window.close()
     if event == "cancel":
         return settings
@@ -322,15 +317,38 @@ def filter_items(settings: dict) -> dict:
 
 
 def validate_settings(settings: dict) -> bool:
-    """Detects any empty strings in the settings.
+    """Detects any invalid settings and can show a popup with an error message.
 
     Parameters
     ----------
     settings : dict
         The settings to validate.
     """
+    if settings["patterns"]["zk link id"].groups > 1:
+        sg.popup("The ID regular expression must have one or no capturing groups.")
+        return False
+    if not os.path.exists(settings["zettelkasten path"]):
+        sg.popup("The zettelkasten path does not exist.")
+        return False
+    if not os.path.exists(settings["site folder path"]):
+        sg.popup("The site folder path does not exist.")
+        return False
+    this_dir, _ = os.path.split(__file__)
+    settings["site folder path"] = os.path.normpath(settings["site folder path"])
+    settings["zettelkasten path"] = os.path.normpath(settings["zettelkasten path"])
+    if 3 > len({this_dir, settings["site folder path"], settings["zettelkasten path"]}):
+        error_message = (
+            "Error: the zettelkasten, the website's files, and this program's files"
+            " should be in different folders."
+        )
+        sg.popup(error_message)
+        return False
     for key, value in settings.items():
         if isinstance(value, str):
             if not value and key != "internal html link prefix":
+                sg.popup(
+                    'Each setting must be given a value, except the "internal html link'
+                    ' prefix" setting.'
+                )
                 return False
     return True
