@@ -174,25 +174,31 @@ settings = Settings(
 settings.load(fallback_option="prompt user")
 
 
-def create_settings_window(settings: dict = None) -> sg.Window:
+def create_settings_window(settings: dict) -> sg.Window:
     """Creates and displays the settings menu.
 
     Parameters
     ----------
-    settings : dict, None
-        The settings to use.
+    settings : dict
+        The settings data dictionary.
     """
     sg.theme("DarkAmber")
 
     general_tab_layout = [
-        create_text_chooser("site title", settings),
-        create_text_chooser("copyright text", settings),
-        create_text_chooser("site subfolder name", settings),
-        create_text_chooser("internal html link prefix", settings),
-        # create_text_chooser("internal zk link start", settings),
-        # create_text_chooser("internal zk link end", settings),
-        create_folder_chooser("site folder path", settings),
-        create_folder_chooser("zettelkasten path", settings),
+        create_text_chooser("site title: ", "site title", settings),
+        create_text_chooser("copyright text: ", "copyright text", settings),
+        create_text_chooser("site subfolder name: ", "site subfolder name", settings),
+        create_text_chooser(
+            "internal HTML link prefix: ", "internal html link prefix", settings
+        ),
+        create_text_chooser("link start: ", "zk link start", settings),
+        create_text_chooser("link end: ", "zk link end", settings),
+        create_folder_chooser(
+            "site folder path (folder): ", "site folder path", settings
+        ),
+        create_folder_chooser(
+            "zettelkasten path (folder): ", "zettelkasten path", settings
+        ),
         create_checkbox("hide tags", "hide tags", settings),
         create_checkbox(
             "hide dates in the chronological index", "hide chrono index dates", settings
@@ -200,12 +206,16 @@ def create_settings_window(settings: dict = None) -> sg.Window:
     ]
 
     color_tab_layout = [
-        create_color_chooser("body background color", settings),
-        create_color_chooser("header background color", settings),
-        create_color_chooser("header text color", settings),
-        create_color_chooser("header hover color", settings),
-        create_color_chooser("body link color", settings),
-        create_color_chooser("body hover color", settings),
+        create_color_chooser(
+            "body background color: ", "body background color", settings
+        ),
+        create_color_chooser(
+            "header background color: ", "header background color", settings
+        ),
+        create_color_chooser("header text color: ", "header text color", settings),
+        create_color_chooser("header hover color: ", "header hover color", settings),
+        create_color_chooser("body link color: ", "body link color", settings),
+        create_color_chooser("body hover color: ", "body hover color", settings),
     ]
 
     layout = [
@@ -226,74 +236,76 @@ def create_settings_window(settings: dict = None) -> sg.Window:
     return sg.Window("zk-ssg settings", layout)
 
 
-def create_text_chooser(name: str, settings: dict) -> list:
+def create_text_chooser(title: str, key: str, settings: dict) -> list:
     """Creates PySimpleGUI elements for choosing text.
 
     Parameters
     ----------
-    name : str
-        The name of the setting and the input element, and the text that
-        appears next to that element.
+    title : str
+        The text that appears next to the input element.
+    key : str
+        The key of the setting.
     settings : dict
-        The settings to use.
+        The settings data dictionary.
     """
     try:
-        default_text = settings[name]
+        default_text = settings[key]
     except KeyError:
-        default_text = settings[name] = ""
+        default_text = settings[key] = ""
     finally:
-        return [sg.Text(name + ": "), sg.Input(key=name, default_text=default_text)]
+        return [sg.Text(title), sg.Input(key=key, default_text=default_text)]
 
 
-def create_checkbox(title: str, key_name: str, settings: dict) -> list:
+def create_checkbox(title: str, key: str, settings: dict) -> list:
     """Creates PySimpleGUI elements for a labelled checkbox.
 
     Parameters
     ----------
     title : str
         The text that appears next to the checkbox.
-    key_name : str
-        The name of the setting and the key of the checkbox element.
+    key : str
+        The key of the setting.
     settings : dict
-        The settings to use.
+        The settings data dictionary.
     """
-    return [sg.Checkbox(title, key=key_name, default=settings[key_name])]
+    return [sg.Checkbox(title, key=key, default=settings[key])]
 
 
-def create_folder_chooser(name: str, settings: dict) -> list:
+def create_folder_chooser(title: str, key: str, settings: dict) -> list:
     """Creates PySimpleGUI elements for choosing a folder.
 
     Parameters
     ----------
-    name : str
-        The name of the setting, the key of the input element, the target of
-        the folder browse button element, and the text that button.
+    title : str
+        The text that appears next to the input element.
+    key : str
+        The key of the setting.
     settings : dict
-        The settings to use.
+        The settings data dictionary.
     """
     return [
-        sg.Text(name + " (folder): "),
-        sg.FolderBrowse(target=name),
-        sg.Input(key=name, default_text=settings[name]),
+        sg.Text(title),
+        sg.FolderBrowse(target=key),
+        sg.Input(key=key, default_text=settings[key]),
     ]
 
 
-def create_color_chooser(name: str, settings: dict) -> list:
+def create_color_chooser(title: str, key: str, settings: dict) -> list:
     """Creates PySimpleGUI elements for choosing a color.
 
     Parameters
     ----------
-    name : str
-        The name of the setting, the key of the input element, the target of
-        the color chooser button element, and the text that appears next to
-        the button.
+    title : str
+        The text that appears next to the input element.
+    key : str
+        The key of the setting.
     settings : dict
-        The settings to use.
+        The settings data dictionary.
     """
     return [
-        sg.Text(name + ": "),
-        sg.ColorChooserButton("choose", target=name),
-        sg.Input(key=name, default_text=settings[name]),
+        sg.Text(title),
+        sg.ColorChooserButton("choose", target=key),
+        sg.Input(key=key, default_text=settings[key]),
     ]
 
 
