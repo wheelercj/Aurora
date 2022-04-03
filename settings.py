@@ -339,10 +339,14 @@ def validate_settings(settings: dict) -> bool:
     if "patterns" in settings and settings["patterns"]["zk link id"].groups > 1:
         sg.popup("The ID regular expression must have one or no capturing groups.")
         return False
-    if not os.path.exists(settings["zettelkasten path"]):
+    if not os.path.exists(settings["zettelkasten path"]) or not os.path.isdir(
+        settings["zettelkasten path"]
+    ):
         sg.popup("The zettelkasten path does not exist.")
         return False
-    if not os.path.exists(settings["site folder path"]):
+    if not os.path.exists(settings["site folder path"]) or not os.path.isdir(
+        settings["site folder path"]
+    ):
         sg.popup("The site folder path does not exist.")
         return False
     this_dir, _ = os.path.split(__file__)
