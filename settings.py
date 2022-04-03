@@ -324,7 +324,7 @@ def validate_settings(settings: dict) -> bool:
     settings : dict
         The settings to validate.
     """
-    if settings["patterns"]["zk link id"].groups > 1:
+    if "patterns" in settings and settings["patterns"]["zk link id"].groups > 1:
         sg.popup("The ID regular expression must have one or no capturing groups.")
         return False
     if not os.path.exists(settings["zettelkasten path"]):

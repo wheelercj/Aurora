@@ -46,7 +46,7 @@ def generate_site(settings: Settings) -> None:
     """
     show_progress(0)
     logging.info("Getting the application settings.")
-    if not validate_settings(settings):
+    if not validate_settings(settings.data):
         settings = show_settings_window(settings)
     site_path = settings["site folder path"]
 
