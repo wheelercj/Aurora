@@ -167,8 +167,10 @@ settings = Settings(
                 "zk link id": re.compile(r"(\d{14})"),
             },
         ),
+        "site folder path": "",
         "site subfolder name": "pages",
         "site title": "Site Title Here",
+        "zettelkasten path": "",
     },
 )
 settings.load(fallback_option="prompt user")
