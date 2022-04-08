@@ -5,7 +5,7 @@ import shutil
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 import send2trash  # https://pypi.org/project/Send2Trash/
 from typing import List
-from ssg.settings import Settings, settings, show_settings_window, validate_settings
+from ssg.settings import settings, show_settings_window, validate_settings
 from ssg.zettel import Zettel
 from ssg.reformat_zettels import reformat_zettels
 from ssg.reformat_html import reformat_html_files
@@ -22,15 +22,9 @@ from ssg.utils import (
 )
 
 
-def generate_site(settings: Settings) -> None:
-    """Generates all the site's files.
-
-    Parameters
-    ----------
-    settings : Settings
-        The settings dictionary. If not provided, the settings will be loaded
-        from the settings.json file.
-    """
+def generate_site() -> None:
+    """Generates all the site's files.""" 
+    global settings
     show_progress(0)
     logging.info("Getting the application settings.")
     if not validate_settings(settings.data):

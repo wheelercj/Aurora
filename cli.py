@@ -1,9 +1,8 @@
 from ssg.generate_site import generate_site
-from ssg.settings import settings
 
 
 def main() -> None:
-    generate_site(settings)
+    generate_site()
 
 
 if __name__ == "__main__":

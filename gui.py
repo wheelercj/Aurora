@@ -41,7 +41,7 @@ def respond_to_main_menu_event(event: str, settings: Settings) -> Optional[dict]
         The settings dictionary. If not provided, the settings will be loaded.
     """
     if event == "generate site":
-        generate_site(settings)
+        generate_site()
     elif event == "settings":
         settings = settings.prompt_user_for_all_settings(settings)
     return settings
