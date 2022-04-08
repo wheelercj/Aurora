@@ -70,7 +70,9 @@ def generate_site(settings: Settings) -> None:
 
     logging.info(f"Copying the zettels to {site_path}")
     show_progress(12)
-    zettels = copy_zettels_to_site_folder(zettels, site_path, site_pages_path)
+    zettels: List[Zettel] = copy_zettels_to_site_folder(
+        zettels, site_path, site_pages_path
+    )
 
     logging.info("Creating index files of all published zettels.")
     show_progress(15)
@@ -78,26 +80,16 @@ def generate_site(settings: Settings) -> None:
 
     logging.info("Searching for any attachments that are linked to in the zettels.")
     show_progress(20)
-    n = copy_attachments(zettels, site_pages_path)
+    n: int = copy_attachments(zettels, site_pages_path)
     logging.info(f"Found {n} attachments and copied them to {site_pages_path}")
 
     reformat_zettels(zettels, settings)
     show_progress(25)
-    new_html_paths = regenerate_html_files(zettels, site_path, site_pages_path)
-
-    show_progress(50)
-    n = convert_attachment_links(new_html_paths)
-    logging.info(f"Converted {n} attachment links from the md to the html format.")
-
-    logging.info("Adding syntax highlighting to code in codeblocks.")
-    show_progress(60)
-    syntax_highlight_code(new_html_paths)
-
-    logging.info("Inserting the site header, footer, etc. into each file.")
-    append_copyright_notice(site_path, settings["copyright text"])
-    copy_template_html_files(site_path)
-    wrap_template_html(site_path, new_html_paths, settings["site title"])
-    insert_all_index_links(site_path)
+    new_html_paths: List[str] = regenerate_html_files(
+        zettels, site_path, site_pages_path
+    )
+    show_progress(30)
+    reformat_html_files(site_path, new_html_paths, settings)
     show_progress(85)
 
     logging.info("Checking for style.css.")
@@ -110,6 +102,35 @@ def generate_site(settings: Settings) -> None:
 
     show_progress(100)
     print(f"Successfully generated {len(new_html_paths)} HTML files.")
+
+
+def reformat_html_files(
+    site_path: str, html_paths: List[str], settings: Settings
+) -> None:
+    """Reformats the HTML files.
+
+    Parameters
+    ----------
+    site_path : str
+        The path to the site's folder.
+    html_paths : List[str]
+        The absolute paths to the HTML files.
+    settings : Settings
+        The settings dictionary.
+    """
+    n = convert_attachment_links(html_paths)
+    show_progress(50)
+    logging.info(f"Converted {n} attachment links from the md to the html format.")
+
+    logging.info("Adding syntax highlighting to code in codeblocks.")
+    show_progress(60)
+    syntax_highlight_code(html_paths)
+
+    logging.info("Inserting the site header, footer, etc. into each file.")
+    append_copyright_notice(site_path, settings["copyright text"])
+    copy_template_html_files(site_path)
+    wrap_template_html(site_path, html_paths, settings["site title"])
+    insert_all_index_links(site_path)
 
 
 def append_copyright_notice(site_path: str, copyright_text: str) -> None:
@@ -330,7 +351,7 @@ def check_links(zettels: List[Zettel]) -> None:
 
 def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
     """Convert file links and remove tags.
-    
+
     Convert any file links to absolute markdown-style HTML links, and remove
     all tags from the files if the setting to hide tags is True.
 
