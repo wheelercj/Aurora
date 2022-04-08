@@ -14,18 +14,12 @@ from ssg.indexes import (
     create_alphabetical_index_file,
     create_chronological_index_file,
 )
-from ssg.utils import logging, get_file_contents, copy_file_iff_not_present
-
-
-def show_progress(n: int) -> None:
-    """Shows a progress bar in a new window.
-
-    Parameters
-    ----------
-    n : int
-        The percentage of the progress bar to fill.
-    """
-    sg.one_line_progress_meter("generating the site", n, 100, "progress meter")
+from ssg.utils import (
+    logging,
+    show_progress,
+    get_file_contents,
+    copy_file_iff_not_present,
+)
 
 
 def generate_site(settings: Settings) -> None:
@@ -47,9 +41,8 @@ def generate_site(settings: Settings) -> None:
     show_progress(2)
     zettels = get_zettels_to_publish(settings["zettelkasten path"])
     logging.info(f"Found {len(zettels)} zettels that contain `#published`.")
-    show_progress(5)
+    show_progress(50)
     check_links(zettels)
-    show_progress(10)
 
     logging.info("Creating the pages folder if it doesn't already exist.")
     site_pages_path = os.path.join(site_path, settings["site subfolder name"])
@@ -62,26 +55,26 @@ def generate_site(settings: Settings) -> None:
     delete_site_md_files(site_pages_path)
 
     logging.info(f"Copying the zettels to {site_path}")
-    show_progress(12)
+    show_progress(55)
     zettels: List[Zettel] = copy_zettels_to_site_folder(
         zettels, site_path, site_pages_path
     )
 
     logging.info("Creating index files of all published zettels.")
-    show_progress(15)
+    show_progress(60)
     create_md_index_files(zettels, site_path, settings["hide chrono index dates"])
 
     logging.info("Searching for any attachments that are linked to in the zettels.")
-    show_progress(20)
+    show_progress(65)
     n: int = copy_attachments(zettels, site_pages_path)
     logging.info(f"Found {n} attachments and copied them to {site_pages_path}")
 
     reformat_zettels(zettels)
-    show_progress(25)
+    show_progress(70)
     new_html_paths: List[str] = regenerate_html_files(
         zettels, site_path, site_pages_path
     )
-    show_progress(30)
+    show_progress(75)
     reformat_html_files(site_path, new_html_paths)
     show_progress(85)
 
@@ -268,13 +261,16 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     """
     zettel_paths = get_file_paths(zettelkasten_path, ".md")
     zettels_to_publish = []
-
-    for zettel_path in zettel_paths:
+    progress_conversion_ratio = 39 / len(zettel_paths)
+    showed_progress = False
+    for i, zettel_path in enumerate(zettel_paths):
         contents = get_file_contents(zettel_path, "utf8")
         match = settings["patterns"]["published tag"].search(contents)
         if match:
             zettels_to_publish.append(zettel_path)
-
+        if not showed_progress:
+            show_progress(10 + i * progress_conversion_ratio)  # range: 10 to <= 49
+        showed_progress = not showed_progress
     return zettels_to_publish
 
 

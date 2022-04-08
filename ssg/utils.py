@@ -2,7 +2,7 @@ import os
 import sys
 import re
 import shutil
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import PySimpleGUI as sg
 import logging
 from ssg.settings import settings
@@ -12,6 +12,20 @@ __log_path = os.path.join(os.path.dirname(__file__), "zk-ssg.log")
 logging.basicConfig(
     filename=__log_path, encoding="utf-8", filemode="w", level=logging.INFO
 )  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+
+
+def show_progress(percentage: Union[int, float]) -> None:
+    """Shows a progress bar in a new window.
+
+    Parameters
+    ----------
+    percentage : Union[int, float]
+        The percentage of the progress bar to fill. This number will be
+        rounded to the nearest integer.
+    """
+    sg.one_line_progress_meter(
+        "generating the site", int(percentage), 100, "progress meter"
+    )
 
 
 def copy_file_iff_not_present(file_name: str, site_path: str) -> str:
