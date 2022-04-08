@@ -1,8 +1,8 @@
 import re
 from typing import List, Optional, Callable
-import logging
 from ssg.zettel import Zettel, get_zettel_by_id
 from ssg.settings import settings
+from ssg.utils import logging
 
 
 md_linker_type = Callable[[Zettel, Zettel], str]
