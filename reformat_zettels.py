@@ -8,7 +8,7 @@ from utils import logging, replace_pattern
 from convert_links import convert_links_from_zk_to_md
 
 
-def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
+def reformat_zettels(zettels: List[Zettel]) -> None:
     """Convert file links and remove tags.
 
     Convert any file links to absolute markdown-style HTML links, and remove
@@ -18,8 +18,6 @@ def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
     ----------
     zettels : List[Zettel]
         The list of zettels to reformat.
-    settings : dict
-        The settings to use.
     """
     make_file_paths_relative(zettels)
     if settings["hide tags"]:

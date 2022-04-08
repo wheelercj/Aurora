@@ -75,17 +75,17 @@ def generate_site(settings: Settings) -> None:
     n: int = copy_attachments(zettels, site_pages_path)
     logging.info(f"Found {n} attachments and copied them to {site_pages_path}")
 
-    reformat_zettels(zettels, settings)
+    reformat_zettels(zettels)
     show_progress(25)
     new_html_paths: List[str] = regenerate_html_files(
         zettels, site_path, site_pages_path
     )
     show_progress(30)
-    reformat_html_files(site_path, new_html_paths, settings)
+    reformat_html_files(site_path, new_html_paths)
     show_progress(85)
 
     logging.info("Checking for style.css.")
-    check_style(site_path, settings)
+    check_style(site_path)
     show_progress(95)
 
     logging.info("\nGenerated HTML files:")
@@ -508,7 +508,7 @@ def get_all_attachment_paths(zettels: List[Zettel]) -> List[str]:
     return all_attachment_paths
 
 
-def check_style(site_path: str, settings: dict) -> None:
+def check_style(site_path: str) -> None:
     """Copies style.css into the site folder and settings into style.css.
 
     If style.css is already there, this function only tries to update
@@ -518,17 +518,15 @@ def check_style(site_path: str, settings: dict) -> None:
     ----------
     site_path : str
         The path to the site folder.
-    settings : dict
-        The settings to write to style.css.
     """
     site_style_path = copy_file_iff_not_present("style.css", site_path)
     try:
-        update_css(site_style_path, settings)
+        update_css(site_style_path)
     except ValueError:
         logging.error("  style.css cannot be parsed.")
 
 
-def update_css(site_style_path: str, settings: dict) -> None:
+def update_css(site_style_path: str) -> None:
     """Updates the site's copy of style.css with the user's settings.
 
     Raises ValueError if the file cannot be parsed.
@@ -537,8 +535,6 @@ def update_css(site_style_path: str, settings: dict) -> None:
     ----------
     site_style_path : str
         The path to the site's style.css.
-    settings : dict
-        The settings to write to style.css.
     """
     with open(site_style_path, "r", encoding="utf8") as file:
         contents = file.read()

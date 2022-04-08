@@ -7,13 +7,11 @@ from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
 
 # internal imports
-from settings import Settings, settings
+from settings import settings
 from utils import logging, replace_pattern, copy_file_iff_not_present
 
 
-def reformat_html_files(
-    site_path: str, html_paths: List[str], settings: Settings
-) -> None:
+def reformat_html_files(site_path: str, html_paths: List[str]) -> None:
     """Reformats the HTML files.
 
     Parameters
@@ -22,8 +20,6 @@ def reformat_html_files(
         The path to the site's folder.
     html_paths : List[str]
         The absolute paths to the HTML files.
-    settings : Settings
-        The settings dictionary.
     """
     n = convert_attachment_links(html_paths)
     logging.info(f"Converted {n} attachment links from the md to the html format.")
