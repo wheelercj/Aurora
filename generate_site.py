@@ -329,9 +329,10 @@ def check_links(zettels: List[Zettel]) -> None:
 
 
 def reformat_zettels(zettels: List[Zettel], settings: dict) -> None:
-    """Convert any file links to absolute markdown-style HTML links
-
-    Also, remove all tags from the files if hide_tags is True.
+    """Convert file links and remove tags.
+    
+    Convert any file links to absolute markdown-style HTML links, and remove
+    all tags from the files if the setting to hide tags is True.
 
     Parameters
     ----------
