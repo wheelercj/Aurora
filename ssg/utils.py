@@ -1,4 +1,3 @@
-# external imports
 import os
 import sys
 import re
@@ -6,9 +5,7 @@ import shutil
 from typing import List, Tuple
 import PySimpleGUI as sg
 import logging
-
-# internal imports
-from settings import settings
+from ssg.settings import settings
 
 
 __log_path = os.path.join(os.path.dirname(__file__), "zk-ssg.log")

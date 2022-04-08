@@ -1,10 +1,7 @@
-# external imports
 import os
 from typing import List, Optional
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
-
-# internal imports
-from settings import settings
+from ssg.settings import settings
 
 
 class Zettel:

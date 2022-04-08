@@ -1,5 +1,5 @@
-from generate_site import generate_site
-from settings import settings
+from ssg.generate_site import generate_site
+from ssg.settings import settings
 
 
 def main() -> None:

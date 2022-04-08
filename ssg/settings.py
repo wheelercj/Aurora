@@ -173,7 +173,6 @@ settings = Settings(
         "zettelkasten path": "",
     },
 )
-settings.load(fallback_option="prompt user")
 
 
 def create_settings_window(settings: dict) -> sg.Window:
@@ -370,3 +369,6 @@ def validate_settings(settings: dict) -> bool:
                 )
                 return False
     return True
+
+
+settings.load(fallback_option="prompt user")

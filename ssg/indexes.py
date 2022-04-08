@@ -1,12 +1,9 @@
-# internal imports
 import os
 import sys
 from typing import List, Dict
 import PySimpleGUI as sg
-
-# external imports
-from zettel import Zettel, get_zettel_by_file_name
-from settings import settings
+from ssg.zettel import Zettel, get_zettel_by_file_name
+from ssg.settings import settings
 
 
 def edit_categorical_index_file(zettels: List[Zettel]) -> None:

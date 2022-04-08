@@ -1,14 +1,11 @@
-# external imports
 import os
 import re
 from typing import List, Any
 from functools import cache
 from pygments import highlight, lexers  # https://pygments.org/
 from pygments.formatters import HtmlFormatter
-
-# internal imports
-from settings import settings
-from utils import logging, replace_pattern, copy_file_iff_not_present
+from ssg.settings import settings
+from ssg.utils import logging, replace_pattern, copy_file_iff_not_present
 
 
 def reformat_html_files(site_path: str, html_paths: List[str]) -> None:

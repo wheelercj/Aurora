@@ -1,8 +1,8 @@
 # Use `pyinstaller -wF gui.py` to create an .exe for Windows.
 from typing import Optional
 import PySimpleGUI as sg
-from generate_site import generate_site
-from settings import settings, Settings
+from ssg.generate_site import generate_site
+from ssg.settings import settings, Settings
 
 
 def show_main_menu() -> None:

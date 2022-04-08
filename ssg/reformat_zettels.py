@@ -1,11 +1,8 @@
-# external imports
 from typing import List
-
-# internal imports
-from settings import settings
-from zettel import Zettel
-from utils import logging, replace_pattern
-from convert_links import convert_links_from_zk_to_md
+from ssg.settings import settings
+from ssg.zettel import Zettel
+from ssg.utils import logging, replace_pattern
+from ssg.convert_links import convert_links_from_zk_to_md
 
 
 def reformat_zettels(zettels: List[Zettel]) -> None:

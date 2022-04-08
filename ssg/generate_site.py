@@ -1,4 +1,3 @@
-# external imports
 import os
 import re
 import webbrowser
@@ -6,18 +5,16 @@ import shutil
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 import send2trash  # https://pypi.org/project/Send2Trash/
 from typing import List
-
-# internal imports
-from settings import Settings, settings, show_settings_window, validate_settings
-from zettel import Zettel
-from reformat_zettels import reformat_zettels
-from reformat_html import reformat_html_files
-from indexes import (
+from ssg.settings import Settings, settings, show_settings_window, validate_settings
+from ssg.zettel import Zettel
+from ssg.reformat_zettels import reformat_zettels
+from ssg.reformat_html import reformat_html_files
+from ssg.indexes import (
     edit_categorical_index_file,
     create_alphabetical_index_file,
     create_chronological_index_file,
 )
-from utils import logging, get_file_contents, copy_file_iff_not_present
+from ssg.utils import logging, get_file_contents, copy_file_iff_not_present
 
 
 def show_progress(n: int) -> None:
