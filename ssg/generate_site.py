@@ -256,15 +256,17 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     zettel_paths = get_file_paths(zettelkasten_path, ".md")
     zettels_to_publish = []
     progress_conversion_ratio = 39 / len(zettel_paths)
-    showed_progress = False
+    iter_count = 0
     for i, zettel_path in enumerate(zettel_paths):
         contents = get_file_contents(zettel_path, "utf8")
         match = settings["patterns"]["published tag"].search(contents)
         if match:
             zettels_to_publish.append(zettel_path)
-        if not showed_progress:
+        if iter_count == 500:
+            iter_count = 0
             show_progress(10 + i * progress_conversion_ratio)  # range: 10 to <= 49
-        showed_progress = not showed_progress
+        else:
+            iter_count += 1
     return zettels_to_publish
 
 
