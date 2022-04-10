@@ -9,7 +9,7 @@ class Zettel:
         self.path: str = zettel_path
         self.folder_path: str = os.path.dirname(zettel_path)
         self.file_name: str = self.__get_zettel_file_name()  # includes extension
-        self.id: str = self.__get_zettel_id()
+        self.id: Optional[str] = self.__get_zettel_id()
         self.title: str = self.__get_zettel_title()
         self.link: str = self.__get_zettel_link()
         self.tags: List[str] = self.__get_zettel_tags()
@@ -19,10 +19,22 @@ class Zettel:
         _, name_and_extension = os.path.split(self.path)
         return name_and_extension
 
-    def __get_zettel_id(self) -> str:
-        """Gets a zettel's ID from its path."""
+    def __get_zettel_id(self) -> Optional[str]:
+        """Gets the zettel's ID, if it has one.
+
+        Checks the file's name for an ID first, and then checks the contents of
+        the file if no ID is found in the file name. If no ID is found
+        anywhere, the ID is None.
+        """
         zettel_id, _ = os.path.splitext(self.file_name)
-        return zettel_id
+        if settings["patterns"]["zk link id"].match(zettel_id):
+            return zettel_id
+        with open(self.path, "r", encoding="utf8") as file:
+            contents = file.read()
+        match = settings["patterns"]["zk link id"].search(contents)
+        if match:
+            return match[0]
+        return None
 
     def __get_zettel_title(self) -> str:
         """Gets the zettel's title (its first header level 1)."""
