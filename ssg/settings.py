@@ -27,10 +27,6 @@ Settings
 'internal html link prefix' : str
     Text that will be prepended to internal links. This setting can be an empty
     string.
-'zk link end' : str
-    The text that indicates the end of an internal zettelkasten link.
-'zk link start' : str
-    The text that indicates the start of an internal zettelkasten link.
 'patterns' : Settings
     'absolute attachment link' : re.Pattern
         The pattern of a markdown link containing an absolute path to a file.
@@ -54,9 +50,11 @@ Settings
         beginning of the string.
     'triple codeblock' : re.Pattern
         The pattern of a codeblock delimited by triple backticks.
-    'zk link id' : re.Pattern
-        The pattern of the contents of a zettelkasten-style internal link (not
-        including the link delimiters).
+    'zk id' : re.Pattern
+        The pattern of a zettel ID.
+'root pages' : List[str]
+    The list of file names (excluding the file extension) of the pages in the
+    root folder of the site.
 'site folder path' : str
     The absolute path to the root folder of the site's files.
 'site subfolder name' : str
@@ -66,6 +64,10 @@ Settings
     The title that will appear at the top of the site.
 'zettelkasten path' : str
     The absolute path to the zettelkasten folder.
+'zk link end' : str
+    The text that indicates the end of an internal zettelkasten link.
+'zk link start' : str
+    The text that indicates the start of an internal zettelkasten link.
 """
 
 
@@ -147,8 +149,6 @@ settings = Settings(
         "hide chrono index dates": True,
         "hide tags": True,
         "internal html link prefix": "[§] ",
-        "zk link start": "[[",
-        "zk link end": "]]",
         "patterns": Settings(
             setting_dumper=lambda x: x.pattern,
             setting_loader=re.compile,
@@ -164,15 +164,40 @@ settings = Settings(
                 "single codeblock": re.compile(r"(`[^`]+?`)"),
                 "tag": re.compile(r"(?<=\s)#[a-zA-Z0-9_-]+"),
                 "triple codeblock": re.compile(r"(?<=\n)(`{3}(.|\n)*?(?<=\n)`{3})"),
-                "zk link id": re.compile(r"(\d{14})"),
+                "zk id": re.compile(r"(\d{14})"),
             },
         ),
+        "root pages": [
+            "index",
+            "about",
+            "alphabetical-index",
+            "chronological-index",
+        ],
         "site folder path": "",
         "site subfolder name": "pages",
         "site title": "Site Title Here",
         "zettelkasten path": "",
+        "zk link end": "]]",
+        "zk link start": "[[",
     },
 )
+
+
+def get_zk_link_contents_pattern() -> re.Pattern:
+    """Gets the pattern of the contents of a zettelkasten link.
+
+    The pattern must contain either 0 or 1 capture groups.
+    """
+    zk_link_start = re.escape(settings["zk link start"])
+    zk_link_end = re.escape(settings["zk link end"])
+    return re.compile(f"{zk_link_start}(.+){zk_link_end}")
+
+
+def get_zk_id_not_in_link_pattern() -> re.Pattern:
+    """Gets the pattern of a zettel ID that is not in a zettelkasten link."""
+    zk_link_start = re.escape(settings["zk link start"])
+    zk_id_pattern = settings["patterns"]["zk id"].pattern
+    return re.compile(rf"(?<!\\)(?<!{zk_link_start}){zk_id_pattern}")
 
 
 def create_settings_window(settings: dict) -> sg.Window:
@@ -192,6 +217,7 @@ def create_settings_window(settings: dict) -> sg.Window:
         create_text_chooser(
             "internal HTML link prefix: ", "internal html link prefix", settings
         ),
+        # create_text_chooser("ID regular expression: ", "patterns.zk id", settings),  # TODO: add support for the "patterns.zk id" syntax?
         create_text_chooser("link start: ", "zk link start", settings),
         create_text_chooser("link end: ", "zk link end", settings),
         create_folder_chooser(
@@ -337,7 +363,7 @@ def validate_settings(settings: dict) -> bool:
     settings : dict
         The settings to validate.
     """
-    if "patterns" in settings and settings["patterns"]["zk link id"].groups > 1:
+    if "patterns" in settings and settings["patterns"]["zk id"].groups > 1:
         sg.popup("The ID regular expression must have one or no capturing groups.")
         return False
     if not os.path.exists(settings["zettelkasten path"]) or not os.path.isdir(

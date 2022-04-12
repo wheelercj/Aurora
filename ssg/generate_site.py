@@ -5,8 +5,13 @@ import shutil
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 import send2trash  # https://pypi.org/project/Send2Trash/
 from typing import List
-from ssg.settings import settings, show_settings_window, validate_settings
-from ssg.zettel import Zettel
+from ssg.settings import (
+    settings,
+    show_settings_window,
+    validate_settings,
+    get_zk_link_contents_pattern,
+)
+from ssg.zettel import Zettel, get_zettel_by_id_or_file_name
 from ssg.reformat_zettels import reformat_zettels
 from ssg.reformat_html import reformat_html_files
 from ssg.indexes import (
@@ -23,7 +28,7 @@ from ssg.utils import (
 
 
 def generate_site() -> None:
-    """Generates all the site's files.""" 
+    """Generates all the site's files."""
     global settings
     show_progress(0)
     logging.info("Getting the application settings.")
@@ -36,7 +41,7 @@ def generate_site() -> None:
     zettels = get_zettels_to_publish(settings["zettelkasten path"])
     logging.info(f"Found {len(zettels)} zettels that contain `#published`.")
     show_progress(50)
-    check_links(zettels)
+    # check_links(zettels)  # TODO: remove?
 
     logging.info("Creating the pages folder if it doesn't already exist.")
     site_pages_path = os.path.join(site_path, settings["site subfolder name"])
@@ -107,29 +112,27 @@ def create_md_index_files(
     create_chronological_index_file(zettels, site_path, hide_chrono_index_dates)
 
 
-def check_links(zettels: List[Zettel]) -> None:
-    """Shows a warning message if any zettel links are broken.
+# def check_links(zettels: List[Zettel]) -> None:
+#     """Shows a warning message if any zettel links are broken.
 
-    Parameters
-    ----------
-    zettels : List[Zettel]
-        The list of zettels to check.
-    """
-    pattern = re.compile(
-        re.escape(settings["zk link start"])
-        + settings["patterns"]["zk link id"].pattern
-        + re.escape(settings["zk link end"])
-    )
-    for zettel in zettels:
-        with open(zettel.path, "r", encoding="utf8") as file:
-            contents = file.read()
-        ids = pattern.findall(contents)
-        for id in ids:
-            if id not in (z.id for z in zettels):
-                sg.popup(
-                    f"Warning: zettel with ID {id} cannot be found"
-                    f" but has been linked to in {zettel.title}"
-                )
+#     Parameters
+#     ----------
+#     zettels : List[Zettel]
+#         The list of zettels to check.
+#     """
+#     pattern: re.Pattern = get_zk_link_contents_pattern()
+#     link_start = settings["zk link start"]
+#     link_end = settings["zk link end"]
+#     for zettel in zettels:
+#         with open(zettel.path, "r", encoding="utf8") as file:
+#             file_content = file.read()
+#         links_content = pattern.findall(file_content)
+#         for link_content in links_content:
+#             if not get_zettel_by_id_or_file_name(link_content, zettels):
+#                 sg.popup(
+#                     f'Warning: broken internal link in "{zettel.title}": '
+#                     f"{link_start}{link_content}{link_end}"
+#                 )
 
 
 def regenerate_html_files(
@@ -222,7 +225,7 @@ def copy_zettels_to_site_folder(
         The path to the pages folder within the site folder.
     """
     for i, zettel in enumerate(zettels):
-        if zettel.id.isnumeric():
+        if zettel.file_name not in settings["root pages"]:
             new_path = shutil.copy(zettel.path, site_pages_path)
             zettels[i].path = new_path
         else:
@@ -253,7 +256,7 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     zettelkasten_path : str
         The path to the zettelkasten folder.
     """
-    zettel_paths = get_file_paths(zettelkasten_path, ".md")
+    zettel_paths = get_file_paths(zettelkasten_path, ".md")  # TODO: add support for other file extensions here and other places with `.md`.
     zettels_to_publish = []
     progress_conversion_ratio = 39 / len(zettel_paths)
     iter_count = 0

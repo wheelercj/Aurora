@@ -20,7 +20,7 @@ def reformat_zettels(zettels: List[Zettel]) -> None:
     if settings["hide tags"]:
         remove_all_tags(zettels)
     logging.info(f"Converting internal links from the zk to the md format.")
-    md_linker = md_linker_creator(settings)
+    md_linker = md_linker_creator()
     convert_links_from_zk_to_md(zettels, md_linker=md_linker)
     redirect_links_from_md_to_html(zettels)
 
@@ -58,20 +58,14 @@ def remove_all_tags(zettels: List[Zettel]) -> None:
     logging.info(f"Removed {n} tags.")
 
 
-def md_linker_creator(settings: dict) -> str:
-    """Creates an md linker creator for zettels in multiple folders.
-
-    Parameters
-    ----------
-    settings : dict
-        The settings to use.
-    """
+def md_linker_creator() -> str:
+    """Creates an md linker creator for zettels in multiple folders."""
 
     def create_markdown_link(zettel: Zettel, linked_zettel: Zettel) -> str:
         """Creates a markdown link from one zettel to another.
 
-        Prefixes the links with `[§] `, and points some of the links to
-        the pages folder.
+        Prefixes the links with the internal HTML link prefix chosen in settings and
+        correctly determines whether to point the link to a file in the pages folder.
 
         Parameters
         ----------
@@ -80,15 +74,18 @@ def md_linker_creator(settings: dict) -> str:
         linked_zettel : Zettel
             The zettel that the link is to.
         """
-        if linked_zettel.id.isnumeric() and not zettel.id.isnumeric():
+        if (
+            linked_zettel.file_name not in settings["root pages"]
+            and zettel.file_name in settings["root pages"]
+        ):
             markdown_link = (
                 f"[{settings['internal html link prefix']}{linked_zettel.title}]"
-                f"({settings['site subfolder name']}/{linked_zettel.id}.md)"
+                f"({settings['site subfolder name']}/{linked_zettel.file_name_and_ext})"
             )
         else:
             markdown_link = (
                 f"[{settings['internal html link prefix']}{linked_zettel.title}]"
-                f"({linked_zettel.id}.md)"
+                f"({linked_zettel.file_name_and_ext})"
             )
         return markdown_link
 

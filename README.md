@@ -1,27 +1,22 @@
 # zk-ssg
 
-This is a static site generator (SSG) for [zettelkastens](https://blog.viktomas.com/posts/slip-box/), which means it converts markdown-based zettelkastens into fully functional HTML and CSS files that can be immediately published as a website. This program **_never_** makes any changes to the files in the zettelkasten; it only copies the relevant files to the site folder and works with those copies.
+A static site generator (SSG) for [zettelkastens](https://blog.viktomas.com/posts/slip-box/).
 
-[Here's a site that was built with this program.](https://wheelercj.github.io/notes/)
-
-[Comparisons to other methods for publishing a zettelkasten.](https://wheelercj.github.io/notes/pages/20210510123255.html)
-
-Feature requests, contributions, etc. are welcome!
+Create ready-to-publish HTML files from your markdown files by typing `#published` into them and clicking once! [Here's a site that was built with this program.](https://wheelercj.github.io/notes/).
 
 ## Features
-* After setup (instructions below), you can add more pages to your site by simply adding the `#published` tag to your markdown files and running this program again.
-* All internal links are converted to HTML, regardless of whether they are markdown-style links or zettelkasten-style links.
-* If you have zettelkasten-style links, titles that are mixed into the rest of the page will still be converted correctly. For example, if you have a markdown file named `20201221140928.md` and titled `Positive Health`, and one of your other pages contains the text `also see [[20201221140928]] Positive Health for more details`, that will become `also see [Positive Health](20201221140928.md) for more details` (and then that will be converted to HTML). This program can figure out the correct format even though there is no indication of where the title begins and ends.
-* A settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
+* After setup (instructions below), you can add more pages to your site by simply adding the `#published` tag to your markdown files and running this app again.
+* All internal links are converted to HTML regardless of whether they are markdown-style links or zettelkasten-style links.
+* If you have zettelkasten-style links with titles mixed into the rest of the page, they will still be converted correctly. For example, if you have a markdown file named `20201221140928.md` and titled `Positive Health`, and one of your other pages contains the text `also see [[20201221140928]] Positive Health for more details`, that will become `also see [Positive Health](20201221140928.md) for more details` (and then that will be converted to HTML). This program can figure out the correct format even though there is no indication of where the title ends.
+* The settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
 * Three index pages listing all the other pages are automatically populated: categorical, alphabetical, and chronological indexes.
 * Any broken zettelkasten-style links will be detected.
 * Any zettelkasten-style links with outdated titles will be detected.
 * Any file attachments in the #published pages will be automatically copied to the site folder.
+* This app **_never_** makes any changes to the files in the zettelkasten; it only copies the relevant files to the site folder and works with those copies.
 * This program is 100% compatible with [Zettlr](https://www.zettlr.com/)'s default settings for internal links and file names, and may be compatible with other markdown editors as well.
 
-## Current limitations
-* The only markdown files you can publish that have alphabetic characters in their file names are `index.md` and `about.md`. The names of all the other markdown files you want to publish must be 14-digit numbers followed by `.md`, e.g. `20201221140928.md`. The number represents the time of the file's creation in the YYYYMMDDhhmmss format.
-* Internal links are either in the markdown style, or the zettelkasten style: double square brackets surrounding a 14-digit number, followed by the file's title (its first header), e.g. `[[20201221140928]] this is the title`. The link's 14-digit number is the same as the linked file's name.
+Feature requests, contributions, etc. are welcome!
 
 ## Setup
 1. Create a new folder that will hold your website's files (the "site folder").

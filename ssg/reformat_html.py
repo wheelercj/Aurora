@@ -204,25 +204,12 @@ def wrap_template_html(
             file.truncate(0)
             file.seek(0)  # Without this, \x00 would be inserted into the front
             # of the file.
-            if file_name_is_numeric(path):
+            if os.path.splitext(os.path.split(path)[1])[0] not in settings["root pages"]:
                 header_html = get_header_html(site_title, site_path, "../")
             else:
                 header_html = get_header_html(site_title, site_path)
             footer_html = get_footer_html(site_path)
             file.write(header_html + contents + footer_html)
-
-
-def file_name_is_numeric(path: str) -> bool:
-    """Determines if the file the path is for has a numeric name.
-
-    Parameters
-    ----------
-    path : str
-        The path to the file.
-    """
-    _, name_and_extension = os.path.split(path)
-    name, _ = os.path.splitext(name_and_extension)
-    return name.isnumeric()
 
 
 @cache

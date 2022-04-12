@@ -2,7 +2,7 @@ import os
 import sys
 from typing import List, Dict
 import PySimpleGUI as sg
-from ssg.zettel import Zettel, get_zettel_by_file_name
+from ssg.zettel import Zettel
 from ssg.settings import settings
 
 
@@ -18,7 +18,13 @@ def edit_categorical_index_file(zettels: List[Zettel]) -> None:
     zettels : List[Zettel]
         The zettels to list.
     """
-    index_zettel = get_zettel_by_file_name("index", zettels)
+    index_zettel = None
+    for zettel in zettels:
+        if "index.md" == zettel.file_name_and_ext:
+            index_zettel = zettel
+    if index_zettel is None:
+        sg.popup("index.md is required but was not found.")
+        sys.exit("index.md is required but was not found.")
     with open(index_zettel.path, "r", encoding="utf8") as file:
         index_contents = file.read()
     index_tags: List[str] = settings["patterns"]["tag"].findall(index_contents)
@@ -26,11 +32,9 @@ def edit_categorical_index_file(zettels: List[Zettel]) -> None:
         sg.popup("index.md must have the #published tag.")
         sys.exit("index.md must have the #published tag.")
     index_tags.remove("#published")
-
     categories: Dict[str, str] = create_categorical_indexes(zettels, index_tags)
     for tag, links in categories.items():
         index_contents = index_contents.replace(tag, links, 1)
-
     with open(index_zettel.path, "w", encoding="utf8") as file:
         file.write(index_contents)
 
@@ -97,20 +101,17 @@ def create_categorical_indexes(
     for index_tag in index_tags:
         categories[index_tag] = []
         for zettel in zettels:
-            if zettel.id.isnumeric():
+            if zettel.file_name not in settings["root pages"]:
                 if index_tag in zettel.tags:
                     categories[index_tag].append("* " + zettel.link)
                     unlinked_zettels.remove(zettel)
-
     for zettel in unlinked_zettels:
-        if zettel.title not in ("index", "about"):
+        if zettel.file_name not in settings["root pages"]:
             if "#other" not in categories:
                 categories["#other"] = []
             categories["#other"].append("* " + zettel.link)
-
     for key, value in categories.items():
         categories[key] = "\n".join(value)
-
     return categories
 
 
@@ -127,7 +128,7 @@ def create_alphabetical_index(zettels: List[Zettel]) -> str:
     numeric_links = []
     sorted_zettels = sorted(zettels, key=lambda z: z.title.lower())
     for zettel in sorted_zettels:
-        if zettel.id.isnumeric():
+        if zettel.file_name not in settings["root pages"]:
             numeric_links.append("* " + zettel.link)
     zettel_index = "## alphabetical index\n\n" + "\n".join(numeric_links)
     return zettel_index
@@ -147,14 +148,25 @@ def create_chronological_index(
     hide_chrono_index_dates : bool
         Whether to hide the dates in the chronological index.
     """
-    numeric_links = []
-    sorted_zettels = sorted(zettels, key=lambda z: z.id, reverse=True)
-    for zettel in sorted_zettels:
-        if zettel.id.isnumeric():
-            if hide_chrono_index_dates:
-                numeric_links.append("* " + zettel.link)
-            else:
-                date = f"{zettel.id[0:4]}/{zettel.id[4:6]}/{zettel.id[6:8]}"
-                numeric_links.append("* " + date + " " + zettel.link)
-    zettel_index = "## chronological index\n\n" + "\n".join(numeric_links)
+    z_with_id_links = []
+    non_root_zettels = [
+        zettel for zettel in zettels if zettel.file_name not in settings["root pages"]
+    ]
+    zettels_with_ids = [zettel for zettel in non_root_zettels if zettel.id is not None]
+    zettels_with_ids = sorted(zettels_with_ids, key=lambda z: z.id, reverse=True)
+    for zettel in zettels_with_ids:
+        if hide_chrono_index_dates:
+            z_with_id_links.append("* " + zettel.link)
+        else:
+            date = f"{zettel.id[0:4]}/{zettel.id[4:6]}/{zettel.id[6:8]}"
+            z_with_id_links.append("* " + date + " " + zettel.link)
+    zettel_index = "## chronological index\n\n" + "\n".join(z_with_id_links)
+    zettels_without_ids = [
+        zettel for zettel in non_root_zettels if zettel.id is None
+    ]
+    z_without_id_links = []
+    for zettel in zettels_without_ids:
+        z_without_id_links.append("* " + zettel.link)
+    if z_without_id_links:
+        zettel_index += "\n\n### undated pages\n\n" + "\n".join(z_without_id_links)
     return zettel_index

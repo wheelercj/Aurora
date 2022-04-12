@@ -1,7 +1,7 @@
-import re
 from typing import List, Optional, Callable
-from ssg.zettel import Zettel, get_zettel_by_id
-from ssg.settings import settings
+import PySimpleGUI as sg
+from ssg.zettel import Zettel, get_zettel_by_id_or_file_name
+from ssg.settings import settings, get_zk_link_contents_pattern
 from ssg.utils import logging
 
 
@@ -12,7 +12,6 @@ def convert_links_from_zk_to_md(
     zettels: List[Zettel] = [],
     zettel_paths: List[str] = [],
     md_linker: md_linker_type = None,
-    link_id_pattern: re.Pattern = None,
 ) -> None:
     """Converts links in multiple zettels from the zk to the md format.
 
@@ -32,33 +31,26 @@ def convert_links_from_zk_to_md(
         markdown link from the first zettel to the second one. Only
         needed for custom link formatting or if the zettels are not in
         the same folder.
-    link_id_pattern : re.Pattern, None
-        The compiled regex for the zettel ID in each zettel link.
     """
     if zettel_paths:
         zettels.extend([Zettel(z) for z in zettel_paths])
     if md_linker is None:
-        md_linker = lambda _, linked_z: f"[{linked_z.title}]({linked_z.file_name})"
-    if link_id_pattern is None:
-        link_id_pattern = re.compile(
-            re.escape(settings["zk link start"])
-            + settings["patterns"]["zk link id"].pattern
-            + re.escape(settings["zk link end"])
+        md_linker = (
+            lambda _, linked_z: f"[{linked_z.title}]({linked_z.file_name_and_ext})"
         )
-
     for zettel in zettels:
-        convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker, link_id_pattern)
+        convert_zettel_links_from_zk_to_md(zettel, zettels, md_linker)
 
 
 def convert_zettel_links_from_zk_to_md(
     zettel: Zettel,
     zettels: List[Zettel],
     md_linker: md_linker_type,
-    link_id_pattern: re.Pattern,
 ) -> None:
     """Converts links in one zettel from the zk to the md format.
 
-    Logs warnings for links that have valid IDs but outdated titles.
+    Shows a warning message if any of the internal links are broken. Also logs
+    warnings for links that are broken or have unexpected formats.
 
     Parameters
     ----------
@@ -69,37 +61,29 @@ def convert_zettel_links_from_zk_to_md(
     md_linker : Callable[[Zettel, Zettel], str]
         A function that takes two zettels as arguments and returns a
         markdown link from the first zettel to the second one.
-    link_id_pattern : re.Pattern
-        The compiled regex for the zettel ID in each zettel link.
     """
     contents = get_contents(zettel)
     if not contents:
         return
-    link_ids: List[str] = link_id_pattern.findall(contents)
-    for link_id in set(link_ids):
-        linked_z = get_zettel_by_id(link_id, zettels)
-        if linked_z.link not in contents:
+    links_content: List[str] = get_zk_link_contents_pattern().findall(contents)
+    for link_content in set(links_content):
+        link = f"{settings['zk link start']}{link_content}{settings['zk link end']}"
+        linked_z = get_zettel_by_id_or_file_name(link_content, zettels)
+        if linked_z is None:
             logging.warning(
-                f"`{zettel.title}` has a link with a valid ID "
-                f"but an outdated title. It should be: {linked_z.link}"
+                f'Broken link detected: "{link}" in "{zettel.title}" at {zettel.path}'
             )
-
+            sg.popup(f'Warning: broken internal link in "{zettel.title}": {link}')
+            continue
+        if linked_z.link not in contents and linked_z.alt_link not in contents:
+            logging.warning(
+                f'Unexpected zettel link format: "{link}"\n'
+                f'  Expected format: "{zettel.link}"\n'
+                f'  in "{zettel.title}" at {zettel.path}'
+            )
         markdown_link = md_linker(zettel, linked_z)
-        contents = contents.replace(linked_z.link, markdown_link)
-
-    save_zettel(contents, zettel)
-
-
-def save_zettel(contents: str, zettel: Zettel) -> None:
-    """Overwrites a zettel with new contents.
-
-    Parameters
-    ----------
-    contents : str
-        The new contents of the zettel.
-    zettel : Zettel
-        The zettel to overwrite.
-    """
+        contents = contents.replace(f"{link} {linked_z.title}", markdown_link)
+        contents = contents.replace(link, markdown_link)
     with open(zettel.path, "w", encoding="utf8") as file:
         file.write(contents)
 
