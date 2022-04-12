@@ -2,19 +2,19 @@
 
 A static site generator (SSG) for [zettelkastens](https://blog.viktomas.com/posts/slip-box/).
 
-Create ready-to-publish HTML files from your markdown files by typing `#published` into them and clicking once! [Here's a site that was built with this program.](https://wheelercj.github.io/notes/).
+Create ready-to-publish HTML files from your markdown files by typing `#published` into them and clicking once! [Here's a site that was built with this app](https://wheelercj.github.io/notes/).
 
 ## Features
 * After setup (instructions below), you can add more pages to your site by simply adding the `#published` tag to your markdown files and running this app again.
 * All internal links are converted to HTML regardless of whether they are markdown-style links or zettelkasten-style links.
-* If you have zettelkasten-style links with titles mixed into the rest of the page, they will still be converted correctly. For example, if you have a markdown file named `20201221140928.md` and titled `Positive Health`, and one of your other pages contains the text `also see [[20201221140928]] Positive Health for more details`, that will become `also see [Positive Health](20201221140928.md) for more details` (and then that will be converted to HTML). This program can figure out the correct format even though there is no indication of where the title ends.
+* If you have zettelkasten-style links with titles mixed into the rest of the page, they will still be converted correctly. For example, if you have a markdown file named `20201221140928.md` and titled `Positive Health`, and one of your other pages contains the text `also see [[20201221140928]] Positive Health for more details`, that will become `also see [Positive Health](20201221140928.md) for more details` (and then that will be converted to HTML). This app can figure out the correct format even though there is no indication of where the title ends.
 * The settings menu makes the site's title, colors, and other important options easy to customize. Also, the CSS and the HTML that wraps each page's content can optionally be customized directly. When you generate the site the first time, `style.css`, `header.html`, and `footer.html` will be created and then reused in the future.
 * Three index pages listing all the other pages are automatically populated: categorical, alphabetical, and chronological indexes.
 * Any broken zettelkasten-style links will be detected.
 * Any zettelkasten-style links with outdated titles will be detected.
 * Any file attachments in the #published pages will be automatically copied to the site folder.
 * This app **_never_** makes any changes to the files in the zettelkasten; it only copies the relevant files to the site folder and works with those copies.
-* This program is 100% compatible with [Zettlr](https://www.zettlr.com/)'s default settings for internal links and file names, and may be compatible with other markdown editors as well.
+* This app is 100% compatible with [Zettlr](https://www.zettlr.com/)'s default settings for internal links and file names, and is compatible with many other markdown editors as well.
 
 Feature requests, contributions, etc. are welcome!
 
@@ -36,11 +36,11 @@ Use `gui.py` to run the app with a graphical user interface, or `cli.py` to run 
 * **_Nothing_** in the zettelkasten folder is changed in any way.
 * Site files with the same name as zettelkasten files get overwritten.
 * All markdown files in the site folder's pages folder that do not get overwritten get deleted.
-* The program will ask to delete HTML files that were not overwritten.
+* The app will ask to delete HTML files that were not overwritten.
 * Some markdown files in the site folder (outside the pages folder) may be overwritten, depending on their names.
 
 ### Detailed answer
-When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The program will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's pages folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the pages folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the program will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
+When the site files are being generated, all currently existing markdown and HTML files in the site folder that happen to have the same name as any markdown files in the zettelkasten folder that contain the `#published` tag will be overwritten. The app will not overwrite `style.css` (except for user settings changes), `header.html`, and `footer.html`, and will create them only if they do not already exist. Any markdown files in the site folder's pages folder that do not get overwritten will be deleted. Specific markdown files in the site folder (outside the pages folder) will get overwritten: `index.md`, `about.md`, `alphabetical-index.md`, and `chronological-index.md`. If there are HTML files in the site folder that do not get overwritten, the app will ask to delete them unless their absolute paths are listed in a file in the site folder named `ssg-ignore.txt`, each file path on its own line.
 
 ## first-party dependency
 
