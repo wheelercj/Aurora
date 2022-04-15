@@ -92,7 +92,7 @@ def show_settings_window(settings: Settings) -> Settings:
     settings : Settings
         The current application settings.
     """
-    window = create_settings_window(settings.data)
+    window = create_settings_window(settings.dump_to_dict())
     settings_are_valid = False
     while not settings_are_valid:
         event, new_settings = window.read()
@@ -222,7 +222,7 @@ def create_settings_window(settings: dict) -> sg.Window:
         create_text_chooser(
             "internal HTML link prefix: ", "internal html link prefix", settings
         ),
-        # create_text_chooser("ID regular expression: ", "patterns.zk id", settings),  # TODO: add support for the "patterns.zk id" syntax?
+        create_text_chooser("ID regular expression: ", "zk id", settings["patterns"]),
         create_text_chooser("link start: ", "zk link start", settings),
         create_text_chooser("link end: ", "zk link end", settings),
         create_folder_chooser(
