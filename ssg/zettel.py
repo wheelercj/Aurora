@@ -10,64 +10,64 @@ class Zettel:
         self.folder_path: str = os.path.dirname(zettel_path)
         self.file_name_and_ext: str = os.path.split(self.path)[1]
         self.file_name: str = os.path.splitext(self.file_name_and_ext)[0]
-        self.id: Optional[str] = self.__get_zettel_id()
-        self.title: str = self.__get_zettel_title()
-        self.link: str = self.__get_zettel_link()
-        self.alt_link: Optional[str] = self.__get_zettel_name_link()
-        self.tags: List[str] = self.__get_zettel_tags()
+        self.id: Optional[str] = self.__get_zettel_id(self.path, self.file_name)
+        self.title: str = self.__get_zettel_title(self.path, self.file_name_and_ext)
+        self.link: str = self.__get_zettel_link(self.file_name, self.id, self.title)
+        self.alt_link: Optional[str] = self.__get_zettel_name_link(self.file_name)
+        self.tags: List[str] = self.__get_zettel_tags(self.path)
 
-    def __get_zettel_id(self) -> Optional[str]:
+    def __get_zettel_id(self, path: str, file_name: str) -> Optional[str]:
         """Gets the zettel's ID, if it has one.
 
         Checks the file's name for an ID first, and then checks the contents of
         the file if no ID is found in the file name. If no ID is found
         anywhere, the ID is None.
         """
-        match = settings["patterns"]["zk id"].match(self.file_name)
+        match = settings["patterns"]["zk id"].match(file_name)
         if match:
             return match[0]
-        with open(self.path, "r", encoding="utf8") as file:
+        with open(path, "r", encoding="utf8") as file:
             contents = file.read()
         match = get_zk_id_not_in_link_pattern().search(contents)
         if match:
             return match[0]
 
-    def __get_zettel_title(self) -> str:
+    def __get_zettel_title(self, path: str, file_name_and_ext: str) -> str:
         """Gets the zettel's title (its first header level 1)."""
-        if self.file_name_and_ext == "index.md":
+        if file_name_and_ext == "index.md":
             return "index"
-        elif self.file_name_and_ext == "about.md":
+        elif file_name_and_ext == "about.md":
             return "about"
-        with open(self.path, "r", encoding="utf8") as file:
+        with open(path, "r", encoding="utf8") as file:
             contents = file.read()
         match = settings["patterns"]["h1 content"].search(contents)
         if match:
             return match[0]
         raise ValueError(
-            f"Zettel missing a title: {self.file_name_and_ext}"
+            f"Zettel missing a title: {file_name_and_ext}"
         )  # TODO: choose a title from somewhere else besides an H1?
 
-    def __get_zettel_link(self) -> str:
+    def __get_zettel_link(self, file_name: str, id: Optional[str], title: str) -> str:
         """Gets the zettel's zettelkasten-style link.
 
         E.g. `[[20210919100142]] zettel title here` if the zettel has an ID.
         Otherwise, the zettel link will be in the format `[[file name]]`.
         """
-        if self.id is None:
-            return f"[[{self.file_name}]]"
-        return f"[[{self.id}]] {self.title}"
+        if id is None:
+            return f"[[{file_name}]]"
+        return f"[[{id}]] {title}"
 
-    def __get_zettel_name_link(self) -> Optional[str]:
+    def __get_zettel_name_link(self, file_name: str) -> Optional[str]:
         """Gets the zettel's zettelkasten-style link that uses the file's name.
 
         This will be the same as what __get_zettel_link returns if the zettel
         has no ID.
         """
-        return f"[[{self.file_name}]]"
+        return f"[[{file_name}]]"
 
-    def __get_zettel_tags(self) -> List[str]:
+    def __get_zettel_tags(self, path: str) -> List[str]:
         """Gets all the tags in the zettel."""
-        with open(self.path, "r", encoding="utf8") as file:
+        with open(path, "r", encoding="utf8") as file:
             contents = file.read()
         tags: List[str] = settings["patterns"]["tag"].findall(contents)
         return tags
@@ -81,14 +81,14 @@ class Zettel:
         with open(self.path, "r", encoding="utf8") as file:
             md_text = file.read()
         html_text = HTMLConverter(md_text)
-        html_path = self.create_html_path()
+        html_path = self.create_html_path(self.path)
         with open(html_path, "w", encoding="utf8") as file:
             file.write(html_text)
         return html_path
 
-    def create_html_path(self) -> str:
+    def create_html_path(self, path: str) -> str:
         """Creates an HTML file path from a corresponding md file path."""
-        file_path_and_name, _ = os.path.splitext(self.path)
+        file_path_and_name, _ = os.path.splitext(path)
         new_html_path = file_path_and_name + ".html"
         return new_html_path
 
