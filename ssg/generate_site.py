@@ -9,9 +9,8 @@ from ssg.settings import (
     settings,
     show_settings_window,
     validate_settings,
-    get_zk_link_contents_pattern,
 )
-from ssg.zettel import Zettel, get_zettel_by_id_or_file_name
+from ssg.zettel import Zettel
 from ssg.reformat_zettels import reformat_zettels
 from ssg.reformat_html import reformat_html_files
 from ssg.indexes import (
@@ -41,7 +40,6 @@ def generate_site() -> None:
     zettels = get_zettels_to_publish(settings["zettelkasten path"])
     logging.info(f"Found {len(zettels)} zettels that contain `#published`.")
     show_progress(50)
-    # check_links(zettels)  # TODO: remove?
 
     logging.info("Creating the pages folder if it doesn't already exist.")
     site_pages_path = os.path.join(site_path, settings["site subfolder name"])
@@ -110,29 +108,6 @@ def create_md_index_files(
     edit_categorical_index_file(zettels)
     create_alphabetical_index_file(zettels, site_path)
     create_chronological_index_file(zettels, site_path, hide_chrono_index_dates)
-
-
-# def check_links(zettels: List[Zettel]) -> None:
-#     """Shows a warning message if any zettel links are broken.
-
-#     Parameters
-#     ----------
-#     zettels : List[Zettel]
-#         The list of zettels to check.
-#     """
-#     pattern: re.Pattern = get_zk_link_contents_pattern()
-#     link_start = settings["zk link start"]
-#     link_end = settings["zk link end"]
-#     for zettel in zettels:
-#         with open(zettel.path, "r", encoding="utf8") as file:
-#             file_content = file.read()
-#         links_content = pattern.findall(file_content)
-#         for link_content in links_content:
-#             if not get_zettel_by_id_or_file_name(link_content, zettels):
-#                 sg.popup(
-#                     f'Warning: broken internal link in "{zettel.title}": '
-#                     f"{link_start}{link_content}{link_end}"
-#                 )
 
 
 def regenerate_html_files(
