@@ -62,6 +62,10 @@ Settings
     pages will be placed in by default.
 'site title' : str
     The title that will appear at the top of the site.
+'zettel file types' : List[str]
+    The list of file extensions that are considered to be zettels, including
+    the period. All of the letters are lowercase. If this is changed, the
+    "md ext in link" pattern will need to be updated.
 'zettelkasten path' : str
     The absolute path to the zettelkasten folder.
 'zk link end' : str
@@ -158,7 +162,7 @@ settings = Settings(
                 ),
                 "link path": re.compile(r"(?<=]\().+(?=\))"),
                 "h1 content": re.compile(r"(?<=#\s).+"),
-                "md ext in link": re.compile(r"(?<=\S)\.md(?=\))"),
+                "md ext in link": re.compile(r"(?i)(?<=\S)\.m(d|arkdown)(?=\))"),
                 "md link": re.compile(r"\[(.+)]\((.+)\)"),
                 "published tag": re.compile(r"(?<=\s)#published(?=\s)"),
                 "single codeblock": re.compile(r"(`[^`]+?`)"),
@@ -176,6 +180,7 @@ settings = Settings(
         "site folder path": "",
         "site subfolder name": "pages",
         "site title": "Site Title Here",
+        "zettel file types": [".md", ".markdown"],
         "zettelkasten path": "",
         "zk link end": "]]",
         "zk link start": "[[",

@@ -152,8 +152,8 @@ def regenerate_html_files(
     site_pages_path : str
         The path to the pages folder within the site folder.
     """
-    old_html_paths = get_file_paths(site_path, ".html") + get_file_paths(
-        site_pages_path, ".html"
+    old_html_paths = get_file_paths(site_path, [".html"]) + get_file_paths(
+        site_pages_path, [".html"]
     )
     logging.info("Creating html files from the md files.")
     new_html_paths = create_html_files(zettels)
@@ -256,7 +256,7 @@ def get_paths_of_zettels_to_publish(zettelkasten_path: str) -> List[str]:
     zettelkasten_path : str
         The path to the zettelkasten folder.
     """
-    zettel_paths = get_file_paths(zettelkasten_path, ".md")  # TODO: add support for other file extensions here and other places with `.md`.
+    zettel_paths = get_file_paths(zettelkasten_path, settings["zettel file types"])
     zettels_to_publish = []
     progress_conversion_ratio = 39 / len(zettel_paths)
     iter_count = 0
@@ -281,12 +281,12 @@ def delete_site_md_files(site_pages_path: str) -> None:
     site_pages_path : str
         The path to the site folder.
     """
-    md_paths = get_file_paths(site_pages_path, ".md")
+    md_paths = get_file_paths(site_pages_path, settings["zettel file types"])
     for path in md_paths:
         os.remove(path)
 
 
-def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
+def get_file_paths(dir_path: str, file_extensions: List[str]) -> List[str]:
     """Gets the paths of files in a directory
 
     Only paths of files with the given file extension are included.
@@ -295,15 +295,17 @@ def get_file_paths(dir_path: str, file_extension: str) -> List[str]:
     ----------
     dir_path : str
         The path to the directory to get the file paths of.
-    file_extension : str
-        The file extension to filter by.
+    file_extensions : List[str]
+        The file extensions to filter by. All letters must be lowercase.
+        Including the extension's leading period is recommended.
     """
     file_names = os.listdir(dir_path)
     file_paths = []
     for file_name in file_names:
-        if file_name.endswith(file_extension):
-            file_path = os.path.join(dir_path, file_name)
-            file_paths.append(file_path)
+        for extension in file_extensions:
+            if file_name.lower().endswith(extension):
+                file_path = os.path.join(dir_path, file_name)
+                file_paths.append(file_path)
     return file_paths
 
 
