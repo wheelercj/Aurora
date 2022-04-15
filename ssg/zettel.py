@@ -33,7 +33,11 @@ class Zettel:
             return match[0]
 
     def __get_zettel_title(self, path: str, file_name_and_ext: str) -> str:
-        """Gets the zettel's title (its first header level 1)."""
+        """Gets the zettel's title.
+        
+        The title is the content of the first header level 1, or the file name
+        if there is no header level 1.
+        """
         if file_name_and_ext == "index.md":
             return "index"
         elif file_name_and_ext == "about.md":
@@ -43,9 +47,7 @@ class Zettel:
         match = settings["patterns"]["h1 content"].search(contents)
         if match:
             return match[0]
-        raise ValueError(
-            f"Zettel missing a title: {file_name_and_ext}"
-        )  # TODO: choose a title from somewhere else besides an H1?
+        return file_name_and_ext
 
     def __get_zettel_link(self, file_name: str, id: Optional[str], title: str) -> str:
         """Gets the zettel's zettelkasten-style link.
