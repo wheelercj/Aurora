@@ -161,7 +161,7 @@ settings = Settings(
                     r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9_-]+)(?=\))"
                 ),
                 "link path": re.compile(r"(?<=]\().+(?=\))"),
-                "h1 content": re.compile(r"(?<=#\s).+"),
+                "h1 content": re.compile(r"^# (.+)$"),
                 "md ext in link": re.compile(r"(?i)(?<=\S)\.m(d|arkdown)(?=\))"),
                 "md link": re.compile(r"\[(.+)]\((.+)\)"),
                 "published tag": re.compile(r"(?<=\s)#published(?=\s)"),
