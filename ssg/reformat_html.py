@@ -186,7 +186,7 @@ def revert_html_ampersand_char_codes(codeblock: str) -> str:
         ("&sect;", "§"),
         ("&shy;", "­"),
         ("&sup1;", "¹"),
-        ("&sup2", "²"),
+        ("&sup2;", "²"),
         ("&sup3;", "³"),
         ("&szlig;", "ß"),
         ("&thorn;", "þ"),
