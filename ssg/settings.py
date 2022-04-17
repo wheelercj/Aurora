@@ -79,6 +79,7 @@ from datetime import datetime
 import sys
 import os
 import re
+from copy import deepcopy
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 from tkinter.filedialog import askdirectory
 from app_settings_dict import Settings  # https://pypi.org/project/app-settings-dict/
@@ -93,17 +94,19 @@ def show_settings_window(settings: Settings) -> Settings:
         The current application settings.
     """
     window = create_settings_window(settings.dump_to_dict())
+    new_settings_obj = deepcopy(settings)
     settings_are_valid = False
     while not settings_are_valid:
-        event, new_settings = window.read()
+        event, new_settings_dict = window.read()
         if event == sg.WIN_CLOSED:
             sys.exit(0)
-        new_settings = filter_items(new_settings)
-        settings_are_valid = validate_settings(new_settings)
+        new_settings_dict = nest_items(filter_items(new_settings_dict))
+        new_settings_obj.load_from_dict(new_settings_dict)
+        settings_are_valid = validate_settings(new_settings_obj)
     window.close()
     if event == "cancel":
         return settings
-    settings.update(new_settings)
+    settings = new_settings_obj
     settings.save()
     return settings
 
@@ -222,7 +225,9 @@ def create_settings_window(settings: dict) -> sg.Window:
         create_text_chooser(
             "internal HTML link prefix: ", "internal html link prefix", settings
         ),
-        create_text_chooser("ID regular expression: ", "zk id", settings["patterns"]),
+        create_text_chooser(
+            "ID regular expression: ", "patterns.zk id", settings["patterns"]
+        ),
         create_text_chooser("link start: ", "zk link start", settings),
         create_text_chooser("link end: ", "zk link end", settings),
         create_folder_chooser(
@@ -276,14 +281,16 @@ def create_text_chooser(title: str, key: str, settings: dict) -> list:
     title : str
         The text that appears next to the input element.
     key : str
-        The key of the setting.
+        The key of the setting. If the key contains periods, only the last part
+        after all the periods is used as the key when accessing the settings
+        dictionary.
     settings : dict
         The settings data dictionary.
     """
     try:
-        default_text = settings[key]
+        default_text = settings[key.split(".")[-1]]
     except KeyError:
-        default_text = settings[key] = ""
+        default_text = settings[key.split(".")[-1]] = ""
     finally:
         return [sg.Text(title), sg.Input(key=key, default_text=default_text)]
 
@@ -360,12 +367,35 @@ def filter_items(settings: dict) -> dict:
     return new_settings
 
 
-def validate_settings(settings: dict) -> bool:
-    """Detects any invalid settings and can show a popup with an error message.
+def nest_items(settings: dict) -> dict:
+    """Nests dict items whose keys contain one or more periods.
+
+    For example, if a setting is `settings["a.b.c"] = "value"`, it is moved to
+    `settings["a"]["b"]["c"] = "value"`. Any settings whose keys do not contain
+    periods are not changed.
 
     Parameters
     ----------
     settings : dict
+        The settings to try to nest.
+    """
+    new_settings = dict()
+    for key, value in settings.items():
+        if "." in key:
+            new_settings[key.split(".")[0]] = nest_items(
+                {key.split(".")[1]: value}
+            )
+        else:
+            new_settings[key] = value
+    return new_settings
+
+
+def validate_settings(settings: Settings) -> bool:
+    """Detects any invalid settings and can show a popup with an error message.
+
+    Parameters
+    ----------
+    settings : Settings
         The settings to validate.
     """
     if "patterns" in settings and settings["patterns"]["zk id"].groups > 1:
