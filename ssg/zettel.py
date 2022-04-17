@@ -36,7 +36,7 @@ class Zettel:
         """Gets the zettel's title.
         
         The title is the content of the first header level 1, or the file name
-        if there is no header level 1.
+        including the extension if there is no header level 1.
         """
         if file_name_and_ext == "index.md":
             return "index"
@@ -53,7 +53,8 @@ class Zettel:
         """Gets the zettel's zettelkasten-style link.
 
         E.g. `[[20210919100142]] zettel title here` if the zettel has an ID.
-        Otherwise, the zettel link will be in the format `[[file name]]`.
+        Otherwise, the zettel link will be in the format `[[file name]]`, which
+        does not include the file extension.
         """
         if id is None:
             return f"[[{file_name}]]"
@@ -62,8 +63,8 @@ class Zettel:
     def __get_zettel_name_link(self, file_name: str) -> Optional[str]:
         """Gets the zettel's zettelkasten-style link that uses the file's name.
 
-        This will be the same as what __get_zettel_link returns if the zettel
-        has no ID.
+        This does not include the file extension. This will be the same as what
+        __get_zettel_link returns if the zettel has no ID.
         """
         return f"[[{file_name}]]"
 
