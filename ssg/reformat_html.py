@@ -100,7 +100,7 @@ def highlight_codeblock(
         The contents of the HTML file.
     """
     if cb_contents_match:
-        plain_codeblock = revert_html(cb_contents_match[0])
+        plain_codeblock = revert_html_ampersand_char_codes(cb_contents_match[0])
         result = highlight(plain_codeblock, lexer, formatter)
         contents = contents.replace(cb_contents_match[0], result, 1)
         # Remove empty line at the end of the code block.
@@ -129,22 +129,71 @@ def get_lexer(language: str) -> Any:
     return lexers.get_lexer_by_name(language)
 
 
-def revert_html(codeblock: str) -> str:
-    """Converts certain HTML strings back to plaintext
+def revert_html_ampersand_char_codes(codeblock: str) -> str:
+    """Converts HTML ampersand character codes back to plaintext.
 
     For example, `&lt;` is converted back to `<`.
 
     Parameters
     ----------
     codeblock : str
-        The codeblock to revert.
+        The codeblock content to revert.
     """
     replacements = [
-        ("&lt;", "<"),
-        ("&gt;", ">"),
-        ("&quot;", '"'),
         ("&#39;", "'"),
+        ("&acute;", "´"),
+        ("&aelig;", "æ"),
+        ("&AElig;", "Æ"),
         ("&amp;", "&"),
+        ("&Aring;", "Å"),
+        ("&brvbar;", "¦"),
+        ("&ccedil;", "ç"),
+        ("&Ccedil;", "Ç"),
+        ("&cedil;", "¸"),
+        ("&cent;", "¢"),
+        ("&copy;", "©"),
+        ("&curren;", "¤"),
+        ("&deg;", "°"),
+        ("&divide;", "÷"),
+        ("&eth;", "ð"),
+        ("&ETH;", "Ð"),
+        ("&frac12;", "½"),
+        ("&frac14;", "¼"),
+        ("&frac34;", "¾"),
+        ("&gt;", ">"),
+        ("&iexcl;", "¡"),
+        ("&iquest;", "¿"),
+        ("&laquo;", "«"),
+        ("&lt;", "<"),
+        ("&macr;", "¯"),
+        ("&micro;", "µ"),
+        ("&middot;", "·"),
+        ("&nbsp;", "u"),
+        ("&not;", "¬"),
+        ("&ntilde;", "ñ"),
+        ("&Ntilde;", "Ñ"),
+        ("&oelig;", "œ"),
+        ("&OElig;", "Œ"),
+        ("&ordf;", "ª"),
+        ("&ordm;", "º"),
+        ("&Oslash;", "Ø"),
+        ("&para;", "¶"),
+        ("&plusmn;", "±"),
+        ("&pound;", "£"),
+        ("&quot;", '"'),
+        ("&raquo;", "»"),
+        ("&reg;", "®"),
+        ("&sect;", "§"),
+        ("&shy;", "­"),
+        ("&sup1;", "¹"),
+        ("&sup2", "²"),
+        ("&sup3;", "³"),
+        ("&szlig;", "ß"),
+        ("&thorn;", "þ"),
+        ("&THORN;", "Þ"),
+        ("&times;", "×"),
+        ("&uml;", "¨"),
+        ("&yen;", "¥"),
     ]
     for replacement in replacements:
         codeblock = codeblock.replace(replacement[0], replacement[1])
