@@ -154,13 +154,17 @@ def create_chronological_index(
     ]
     zettels_with_ids = [zettel for zettel in non_root_zettels if zettel.id is not None]
     zettels_with_ids = sorted(zettels_with_ids, key=lambda z: z.id, reverse=True)
-    for zettel in zettels_with_ids:
-        if hide_chrono_index_dates:
+    if hide_chrono_index_dates:
+        for zettel in zettels_with_ids:
             z_with_id_links.append("* " + zettel.link)
-        else:
+    else:
+        for zettel in zettels_with_ids:
             date = f"{zettel.id[0:4]}/{zettel.id[4:6]}/{zettel.id[6:8]}"
             z_with_id_links.append("* " + date + " " + zettel.link)
-    zettel_index = "## chronological index\n\n" + "\n".join(z_with_id_links)
+    zettel_index = "## chronological index\n\n"
+    if not hide_chrono_index_dates:
+        zettel_index += "_Dates shown here are the original post dates, not necessarily latest edit dates._\n\n"
+    zettel_index += "\n".join(z_with_id_links)
     zettels_without_ids = [
         zettel for zettel in non_root_zettels if zettel.id is None
     ]
