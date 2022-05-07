@@ -169,10 +169,12 @@ def replace_file_paths(
     start = 0
     n_replaced = 0
     while True:
+        diff = 0
         match = path_pattern.search(contents, start)
         if not match:
             return contents, n_replaced
         if os.path.isfile(match[0]):
+            diff = len(match[0]) - len(match[1])
             contents = path_pattern.sub(replacement, contents, count=1)
             n_replaced += 1
-        start = match.end()
+        start = match.end() - diff
