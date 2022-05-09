@@ -25,6 +25,7 @@ from ssg.utils import (
     copy_file_iff_not_present,
 )
 
+# TODO: add a way to control the size of individual images on the site.
 
 def generate_site() -> None:
     """Generates all the site's files."""
@@ -179,6 +180,7 @@ def copy_attachments(zettels: List[Zettel], site_pages_path: str) -> int:
         except shutil.SameFileError:
             _, file_name = os.path.split(path)
             logging.info(f"  Did not copy {file_name} because it is already there.")
+    # TODO: find and request to delete unused attachments
 
     return len(attachment_paths)
 

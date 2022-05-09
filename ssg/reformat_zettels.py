@@ -92,6 +92,7 @@ def md_linker_creator() -> str:
     return create_markdown_link
 
 
+# TODO: somehow allow linking to markdown files that will remain markdown files.
 def redirect_links_from_md_to_html(zettels: List[Zettel]) -> None:
     """Changes links from pointing to markdown files to HTML files.
 
