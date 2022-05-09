@@ -163,7 +163,7 @@ def create_chronological_index(
             z_with_id_links.append("* " + date + " " + zettel.link)
     zettel_index = "## chronological index\n\n"
     if not hide_chrono_index_dates:
-        zettel_index += "_Dates shown here are the original post dates, not necessarily latest edit dates._\n\n"
+        zettel_index += "_Dates shown here are the original file creation dates, not necessarily latest edit or post dates._\n\n"
     zettel_index += "\n".join(z_with_id_links)
     zettels_without_ids = [
         zettel for zettel in non_root_zettels if zettel.id is None
