@@ -198,7 +198,7 @@ def get_zk_link_contents_pattern() -> re.Pattern:
     """
     zk_link_start = re.escape(settings["zk link start"])
     zk_link_end = re.escape(settings["zk link end"])
-    return re.compile(f"{zk_link_start}(.+){zk_link_end}")
+    return re.compile(f"{zk_link_start}(.+?){zk_link_end}")
 
 
 def get_zk_id_not_in_link_pattern() -> re.Pattern:
