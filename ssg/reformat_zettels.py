@@ -1,8 +1,10 @@
 from typing import List
-from ssg.settings import settings
-from ssg.zettel import Zettel
-from ssg.utils import logging, replace_pattern
+
 from ssg.convert_links import convert_links_from_zk_to_md
+from ssg.settings import settings
+from ssg.utils import logging
+from ssg.utils import replace_pattern
+from ssg.zettel import Zettel
 
 
 def reformat_zettels(zettels: List[Zettel]) -> None:
@@ -19,7 +21,7 @@ def reformat_zettels(zettels: List[Zettel]) -> None:
     make_file_paths_relative(zettels)
     if settings["hide tags"]:
         remove_all_tags(zettels)
-    logging.info(f"Converting internal links from the zk to the md format.")
+    logging.info("Converting internal links from the zk to the md format.")
     md_linker = md_linker_creator()
     convert_links_from_zk_to_md(zettels, md_linker=md_linker)
     redirect_links_from_md_to_html(zettels)

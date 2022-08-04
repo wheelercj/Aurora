@@ -43,7 +43,7 @@ Settings
     'published tag' : re.Pattern
         The pattern of the ``#published`` tag.
     'single codeblock' : re.Pattern
-        The pattern of a codeblock delimited by single backticks (an inline 
+        The pattern of a codeblock delimited by single backticks (an inline
         codeblock).
     'tag' : re.Pattern
         The pattern of a tag, including a #. Assumes the tag is not at the very
@@ -73,15 +73,14 @@ Settings
 'zk link start' : str
     The text that indicates the start of an internal zettelkasten link.
 """
-
-
-from datetime import datetime
-import sys
 import os
 import re
+import sys
 from copy import deepcopy
-import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
+from datetime import datetime
 from tkinter.filedialog import askdirectory
+
+import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 from app_settings_dict import Settings  # https://pypi.org/project/app-settings-dict/
 
 
@@ -161,7 +160,8 @@ settings = Settings(
             setting_loader=re.compile,
             data={
                 "absolute attachment link": re.compile(
-                    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)[^\n]*?([^\\/\n]+\.[a-zA-Z0-9_-]+)(?=\))"
+                    r"(?<=]\()(?:file://)?(?:[a-zA-Z]:|/)"
+                    r"[^\n]*?([^\\/\n]+\.[a-zA-Z0-9_-]+)(?=\))"
                 ),
                 "link path": re.compile(r"(?<=]\().+(?=\))"),
                 "h1 content": re.compile(r"^# (.+)$"),
@@ -382,9 +382,7 @@ def nest_items(settings: dict) -> dict:
     new_settings = dict()
     for key, value in settings.items():
         if "." in key:
-            new_settings[key.split(".")[0]] = nest_items(
-                {key.split(".")[1]: value}
-            )
+            new_settings[key.split(".")[0]] = nest_items({key.split(".")[1]: value})
         else:
             new_settings[key] = value
     return new_settings

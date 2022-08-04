@@ -1,31 +1,28 @@
 import os
 import re
-import webbrowser
 import shutil
+import webbrowser
+from typing import List
+
 import PySimpleGUI as sg  # https://pysimplegui.readthedocs.io/en/latest/
 import send2trash  # https://pypi.org/project/Send2Trash/
-from typing import List
-from ssg.settings import (
-    settings,
-    show_settings_window,
-    validate_settings,
-)
-from ssg.zettel import Zettel
-from ssg.reformat_zettels import reformat_zettels
+
+from ssg.indexes import create_alphabetical_index_file
+from ssg.indexes import create_chronological_index_file
+from ssg.indexes import edit_categorical_index_file
 from ssg.reformat_html import reformat_html_files
-from ssg.indexes import (
-    edit_categorical_index_file,
-    create_alphabetical_index_file,
-    create_chronological_index_file,
-)
-from ssg.utils import (
-    logging,
-    show_progress,
-    get_file_contents,
-    copy_file_iff_not_present,
-)
+from ssg.reformat_zettels import reformat_zettels
+from ssg.settings import settings
+from ssg.settings import show_settings_window
+from ssg.settings import validate_settings
+from ssg.utils import copy_file_iff_not_present
+from ssg.utils import get_file_contents
+from ssg.utils import logging
+from ssg.utils import show_progress
+from ssg.zettel import Zettel
 
 # TODO: add a way to control the size of individual images on the site.
+
 
 def generate_site() -> None:
     """Generates all the site's files."""

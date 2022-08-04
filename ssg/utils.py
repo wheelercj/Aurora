@@ -1,10 +1,14 @@
+import logging
 import os
-import sys
 import re
 import shutil
-from typing import List, Tuple, Union
+import sys
+from typing import List
+from typing import Tuple
+from typing import Union
+
 import PySimpleGUI as sg
-import logging
+
 from ssg.settings import settings
 
 

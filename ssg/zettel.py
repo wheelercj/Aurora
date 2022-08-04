@@ -1,7 +1,11 @@
 import os
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from mistune import markdown as HTMLConverter  # https://github.com/lepture/mistune
-from ssg.settings import settings, get_zk_id_not_in_link_pattern
+
+from ssg.settings import get_zk_id_not_in_link_pattern
+from ssg.settings import settings
 
 
 class Zettel:
@@ -34,7 +38,7 @@ class Zettel:
 
     def __get_zettel_title(self, path: str, file_name_and_ext: str) -> str:
         """Gets the zettel's title.
-        
+
         The title is the content of the first header level 1, or the file name
         including the extension if there is no header level 1.
         """

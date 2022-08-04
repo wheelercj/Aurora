@@ -1,8 +1,14 @@
-from typing import List, Optional, Callable
+from typing import Callable
+from typing import List
+from typing import Optional
+
 import PySimpleGUI as sg
-from ssg.zettel import Zettel, get_zettel_by_id_or_file_name
-from ssg.settings import settings, get_zk_link_contents_pattern
+
+from ssg.settings import get_zk_link_contents_pattern
+from ssg.settings import settings
 from ssg.utils import logging
+from ssg.zettel import get_zettel_by_id_or_file_name
+from ssg.zettel import Zettel
 
 
 md_linker_type = Callable[[Zettel, Zettel], str]

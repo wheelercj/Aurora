@@ -1,6 +1,9 @@
 import sys
+
 from ssg.generate_site import generate_site
-from ssg.settings import settings, validate_settings, show_settings_window
+from ssg.settings import settings  # noqa
+from ssg.settings import show_settings_window
+from ssg.settings import validate_settings
 
 
 def main() -> None:

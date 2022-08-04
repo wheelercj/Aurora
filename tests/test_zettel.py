@@ -1,4 +1,5 @@
-from ssg.zettel import Zettel, get_zettel_by_id_or_file_name
+from ssg.zettel import get_zettel_by_id_or_file_name
+from ssg.zettel import Zettel
 
 
 class Zettel_for_testing(Zettel):
@@ -74,4 +75,4 @@ def test_get_nonexistent_zettel():
     z2.file_name = "emergence"
     z1.file_name_and_ext = "positive health.md"
     z2.file_name_and_ext = "emergence.markdown"
-    assert None == get_zettel_by_id_or_file_name("20200522233056", [z1, z2])
+    assert get_zettel_by_id_or_file_name("20200522233056", [z1, z2]) is None

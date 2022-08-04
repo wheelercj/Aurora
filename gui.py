@@ -1,8 +1,10 @@
 # Use `pyinstaller -wF gui.py` to create an .exe for Windows.
 from typing import Optional
+
 import PySimpleGUI as sg
+
 from ssg.generate_site import generate_site
-from ssg.settings import settings, Settings
+from ssg.settings import settings  # noqa
 
 
 def show_main_menu() -> None:
@@ -15,7 +17,7 @@ def show_main_menu() -> None:
             window.close()
             return
         window.Hide()
-        settings = respond_to_main_menu_event(event, settings)
+        settings = respond_to_main_menu_event(event)
         window.UnHide()
 
 
@@ -30,16 +32,15 @@ def create_main_menu_window() -> sg.Window:
     return sg.Window("zk-ssg", layout)
 
 
-def respond_to_main_menu_event(event: str, settings: Settings) -> Optional[dict]:
+def respond_to_main_menu_event(event: str) -> Optional[dict]:
     """Handles main menu events.
 
     Parameters
     ----------
     event : str
         The event that was triggered.
-    settings : Settings
-        The settings dictionary. If not provided, the settings will be loaded.
     """
+    global settings
     if event == "generate site":
         generate_site()
     elif event == "settings":

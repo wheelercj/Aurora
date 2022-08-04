@@ -1,0 +1,5 @@
+app-settings-dict==0.6.4
+mistune==2.0.4
+Pygments==2.12.0
+pysimplegui
+Send2Trash==1.8.0

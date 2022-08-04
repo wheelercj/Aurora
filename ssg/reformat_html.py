@@ -1,11 +1,17 @@
 import os
 import re
-from typing import List, Any
 from functools import cache
-from pygments import highlight, lexers  # https://pygments.org/
+from typing import Any
+from typing import List
+
+from pygments import highlight  # https://pypi.org/project/Pygments/
+from pygments import lexers
 from pygments.formatters import HtmlFormatter
+
 from ssg.settings import settings
-from ssg.utils import logging, replace_pattern, copy_file_iff_not_present
+from ssg.utils import copy_file_iff_not_present
+from ssg.utils import logging
+from ssg.utils import replace_pattern
 
 
 def reformat_html_files(site_path: str, html_paths: List[str]) -> None:
@@ -253,7 +259,10 @@ def wrap_template_html(
             file.truncate(0)
             file.seek(0)  # Without this, \x00 would be inserted into the front
             # of the file.
-            if os.path.splitext(os.path.split(path)[1])[0] not in settings["root pages"]:
+            if (
+                os.path.splitext(os.path.split(path)[1])[0]
+                not in settings["root pages"]
+            ):
                 header_html = get_header_html(site_title, site_path, "../")
             else:
                 header_html = get_header_html(site_title, site_path)
@@ -317,17 +326,20 @@ def insert_all_index_links(site_path: str) -> None:
     index_path = os.path.join(site_path, "index.html")
     insert_index_links(
         index_path,
-        '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="chronological-index.html">🕑</a></p>',
+        '<p>sort by: <a href="alphabetical-index.html">α</a> '
+        '<a href="chronological-index.html">🕑</a></p>',
     )
     index_path = os.path.join(site_path, "alphabetical-index.html")
     insert_index_links(
         index_path,
-        '<p>sort by: <a href="index.html">💡</a> <a href="chronological-index.html">🕑</a></p>',
+        '<p>sort by: <a href="index.html">💡</a> '
+        '<a href="chronological-index.html">🕑</a></p>',
     )
     index_path = os.path.join(site_path, "chronological-index.html")
     insert_index_links(
         index_path,
-        '<p>sort by: <a href="alphabetical-index.html">α</a> <a href="index.html">💡</a>',
+        '<p>sort by: <a href="alphabetical-index.html">α</a> '
+        '<a href="index.html">💡</a>',
     )
 
 
