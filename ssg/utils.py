@@ -12,7 +12,7 @@ import PySimpleGUI as sg
 from ssg.settings import settings
 
 
-__log_path = os.path.join(os.path.dirname(__file__), "zk-ssg.log")
+__log_path = os.path.join(os.path.dirname(__file__), "Aurora.log")
 logging.basicConfig(
     filename=__log_path, encoding="utf-8", filemode="w", level=logging.INFO
 )  # https://docs.python.org/3/howto/logging.html#logging-basic-tutorial

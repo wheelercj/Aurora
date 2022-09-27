@@ -29,7 +29,7 @@ def create_main_menu_window() -> sg.Window:
         [sg.Button("settings", size=(14, 1), pad=(40, 5))],
         [sg.Button("exit", size=(14, 1), pad=(40, 5))],
     ]
-    return sg.Window("zk-ssg", layout)
+    return sg.Window("Aurora", layout)
 
 
 def respond_to_main_menu_event(event: str) -> Optional[dict]:

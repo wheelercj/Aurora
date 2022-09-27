@@ -270,7 +270,7 @@ def create_settings_window(settings: dict) -> sg.Window:
         [sg.Button("save"), sg.Button("cancel")],
     ]
 
-    return sg.Window("zk-ssg settings", layout)
+    return sg.Window("Aurora settings", layout)
 
 
 def create_text_chooser(title: str, key: str, settings: dict) -> list:
