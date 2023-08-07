@@ -90,9 +90,8 @@ def create_md_index_files(
 ) -> None:
     """Creates markdown files that list all the published zettels
 
-    The files created are alphabetical-index.md and
-    chronological-index.md. The file index.md is also edited, and must
-    already exist.
+    The files created are index.md and alphabetical-index.md. The file
+    categorical-index.md is also edited, and must already exist.
 
     Parameters
     ----------

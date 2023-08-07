@@ -178,7 +178,7 @@ settings = Settings(
             "index",
             "about",
             "alphabetical-index",
-            "chronological-index",
+            "categorical-index",
         ],
         "site folder path": "",
         "site subfolder name": "pages",

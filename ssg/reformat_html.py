@@ -323,23 +323,23 @@ def insert_all_index_links(site_path: str) -> None:
     site_path : str
         The path to the site's folder.
     """
-    index_path = os.path.join(site_path, "index.html")
+    index_path = os.path.join(site_path, "categorical-index.html")
     insert_index_links(
         index_path,
         '<p>sort by: <a href="alphabetical-index.html">α</a> '
-        '<a href="chronological-index.html">🕑</a></p>',
+        '<a href="index.html">🕑</a></p>',
     )
     index_path = os.path.join(site_path, "alphabetical-index.html")
     insert_index_links(
         index_path,
-        '<p>sort by: <a href="index.html">💡</a> '
-        '<a href="chronological-index.html">🕑</a></p>',
+        '<p>sort by: <a href="categorical-index.html">💡</a> '
+        '<a href="index.html">🕑</a></p>',
     )
-    index_path = os.path.join(site_path, "chronological-index.html")
+    index_path = os.path.join(site_path, "index.html")
     insert_index_links(
         index_path,
         '<p>sort by: <a href="alphabetical-index.html">α</a> '
-        '<a href="index.html">💡</a>',
+        '<a href="categorical-index.html">💡</a>',
     )
 
 

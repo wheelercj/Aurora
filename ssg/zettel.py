@@ -42,8 +42,8 @@ class Zettel:
         The title is the content of the first header level 1, or the file name
         including the extension if there is no header level 1.
         """
-        if file_name_and_ext == "index.md":
-            return "index"
+        if file_name_and_ext == "categorical-index.md":
+            return "categorical index"
         elif file_name_and_ext == "about.md":
             return "about"
         with open(path, "r", encoding="utf8") as file:

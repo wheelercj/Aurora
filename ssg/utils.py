@@ -71,11 +71,12 @@ def get_file_contents(absolute_path: str, encoding: str) -> str:
             contents = file.read()
         except UnicodeDecodeError as e:
             logging.error(f"UnicodeDecodeError: {e}")
+            print(f"UnicodeDecodeError: {e}")
             sg.popup(
                 "Error: one or more symbols cannot not be decoded "
                 f"as unicode in file {absolute_path}"
             )
-            sys.exit(f"UnicodeDecodeError: {e}")
+            sys.exit(1)
         else:
             return contents
 
