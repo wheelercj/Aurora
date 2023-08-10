@@ -107,11 +107,8 @@ def create_categorical_indexes(
         categories[index_tag] = []
         for zettel in zettels:
             if zettel.file_name not in settings["root pages"]:
-                print(f"Checking {zettel.title} for tag {index_tag}.")
-                print(f"  {settings['root pages']}")
                 if index_tag in zettel.tags:
                     categories[index_tag].append("* " + zettel.link)
-                    print(f"  {zettel.title} has tag {index_tag}.")
                     unlinked_zettels.remove(zettel)
     for zettel in unlinked_zettels:
         if zettel.file_name not in settings["root pages"]:
